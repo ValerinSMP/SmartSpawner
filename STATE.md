@@ -1,43 +1,42 @@
 # SmartSpawner — actualización focalizada a Minecraft 26.2
 
-Fecha: 2026-10-09. Trabajo: merge upstream en personal.
+Fecha: 2026-10-09. Trabajo en SSH personal.
+Rama: work/valerin-upstream-26.2.
+Fork: https://github.com/ValerinSMP/SmartSpawner.git.
+Partida: valerin, 735c77a3782ce29c557cfb41b743d2ae8d87e3da.
+Upstream real (parent/source GitHub): OpenVdra/SmartSpawner, main.
+Base común: 9cdf8bef4265f738c03ab2ce0662d6aa2728702c.
+La única diferencia propia registrada antes del merge era VALERIN_FORK.md.
 
-- Fork: https://github.com/ValerinSMP/SmartSpawner.git; rama de partida , .
-- Upstream confirmado por parent/source de GitHub: https://github.com/OpenVdra/SmartSpawner.git, rama .
-- Base común: . La diferencia propia previa era únicamente ; no había modificaciones Java propias registradas.
-- Integrado mediante merge real, sin conflictos: ; merge , rama .
-- Ya integrados en la base: Java/release 25, API Paper 1.21.11, README con rango 1.21.6–26.2, soporte Paper/Folia y scheduler correspondiente.
-- Cambios recibidos: runServer de 26.1.2 a 26.2; Lombok 1.18.48, checker-qual 4.2.3, slf4j-api 2.0.19 e instrucciones upstream. No cambia la API mínima, bytecode ni lógica de gameplay.
-- Upstream observado: . Los commits posteriores al objetivo 26.2 quedan fuera: contienen funcionalidades/configuración nuevas y objetivo 26.3, además de correcciones posteriores que deben revisarse por separado.
-- Preservados:  íntegro y  sin seguimiento ni modificaciones; SHA-256 del handoff .
+Merge real sin conflictos: db260e3d9900aeb3121d973509dc3f202943dcfb.
+Objetivo integrado: 65c8f00fb75a99fa53d9d2ed4201bfcfae2fd325.
+Ya estaban integrados Java/release 25, API Paper 1.21.11 y rango declarado hasta 26.2.
+Recibido: runServer 26.2, Lombok 1.18.48, checker-qual 4.2.3,
+slf4j-api 2.0.19 e instrucciones upstream. Sin cambios de mecánicas.
+Upstream actual observado: 08f4e8b86565dacddc368865258c083b3cf0219b.
+Los commits posteriores al objetivo quedan pendientes por separado: nuevas
+funciones/configuración, correcciones de almacenamiento y objetivo 26.3.
 
-## Validación y entrega
+VALERIN_FORK.md conservado íntegro.
+DEVELOPMENT_HANDOFF.md conservado sin seguimiento y sin modificaciones.
+SHA-256 handoff: 4df0d596f2b4c23c983c4c8721cfa518bb78b5606038d4d9110af8e5e42dcb48.
 
-Ejecutado mediante :
-To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
-Daemon will be stopped at the end of the build 
-> Task :api:compileJava UP-TO-DATE
-> Task :api:processResources NO-SOURCE
-> Task :api:classes UP-TO-DATE
-> Task :core:compileJava UP-TO-DATE
-> Task :core:processResources UP-TO-DATE
-> Task :core:classes UP-TO-DATE
-> Task :core:shadowJar UP-TO-DATE
-> Task :core:compileTestJava UP-TO-DATE
-> Task :core:processTestResources NO-SOURCE
-> Task :core:testClasses UP-TO-DATE
-> Task :core:test UP-TO-DATE
+Validación mediante /root/development/tools/run-personal-build.sh:
+./gradlew :core:test :core:shadowJar --no-daemon --no-parallel --max-workers=1
+BUILD SUCCESSFUL; 82 tests, cero fallos, errores u omitidos.
+git diff --check correcto; bot healthy antes/después.
+El AGENTS upstream dice que no hay tests; el árbol real sí contiene tests.
+Un error de escape al generar este documento lanzó además un Gradle incremental
+fuera del wrapper; terminó en 5 segundos, todas las tareas up-to-date.
+Documento corregido; no se modificaron servicios ni fuentes por ese error.
 
-BUILD SUCCESSFUL in 5s
-6 actionable tasks: 6 up-to-date
-Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.1/userguide/configuration_cache_enabling.html.
-BUILD SUCCESSFUL; 82 tests, cero fallos, errores u omitidos.  correcto.
-El bot del host permaneció healthy antes/después. El AGENTS upstream dice que no hay tests, pero el árbol real contiene tests y se ejecutaron.
+JAR del fork: core/build/libs/SmartSpawner-1.8.2.jar.
+Candidato: /root/development/artifacts/SmartSpawner/1.8.2-upstream-26.2/SmartSpawner-1.8.2.jar.
+SHA-256: db325648d0c69d9cabcbebe399547750c08d0e0c63dac6c30189ff98d881ca6d.
 
-Artefacto del fork: .
-SHA-256: .
-Candidato durable: .
-
-Modificado, compilado y tests unitarios aprobados. No instalado ni activado.
-Leaf/Minecraft 26.2 y gameplay siguen pendientes de validación en Test: arranque, carga/persistencia SQLite o MySQL según destino, colocación/rotura/stack, generación y almacenamiento, retirada/venta, permisos/protecciones y reinicio/reconexión.
-No se descargó un JAR oficial ni se ejecutó reset, force-push o lifecycle de servidores.
+Modificado, compilado y tests aprobados. No instalado ni activado.
+Leaf 26.2/gameplay pendientes: arranque, persistencia, colocar/romper/stack,
+generación, almacenamiento, retirada/venta, permisos y reinicio/reconexión en Test.
+No JAR oficial, reset ni force-push. valerin se conserva en su HEAD original.
+Push HTTPS rechazado por falta de autenticación; SSH no tiene host verificado.
+Publicación pendiente; no se alteraron credenciales ni configuración SSH.
