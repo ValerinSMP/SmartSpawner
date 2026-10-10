@@ -151,3 +151,8 @@ performance:
     # How long to stay exact before approximating. Lower is cheaper, higher is more precise.
     # Recommended: 1000-10000.
     approximation_threshold: 1000
+
+# Valerin: only a single spawner may change type by default.
+# A value <= 0 disables the stack restriction.
+spawner_egg_change:
+  max_stack_to_allow_change: 1

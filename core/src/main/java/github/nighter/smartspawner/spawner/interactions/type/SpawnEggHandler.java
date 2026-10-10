@@ -66,6 +66,16 @@ public class SpawnEggHandler {
             return;
         }
 
+        // Preserve the Valerin restriction before firing callbacks or consuming an egg.
+        int maxStack = plugin.getConfig().getInt("spawner_egg_change.max_stack_to_allow_change", 1);
+        if (exceedsEggChangeStackLimit(spawnerData.getStackSize(), maxStack)) {
+            Map<String, String> placeholders = new HashMap<>();
+            placeholders.put("max_stack", String.valueOf(maxStack));
+            placeholders.put("current_stack", String.valueOf(spawnerData.getStackSize()));
+            messageService.sendMessage(player, "egg_change_stacked_not_allowed", placeholders);
+            return;
+        }
+
         // Get entity type from spawn egg
         Optional<EntityType> optionalEntityType = getEntityTypeFromSpawnEgg(spawnEgg.getType());
 
@@ -77,6 +87,10 @@ public class SpawnEggHandler {
                 consumeItemIfSurvival(player, spawnEgg);
             }
         }
+    }
+
+    static boolean exceedsEggChangeStackLimit(int stackSize, int maxStack) {
+        return maxStack > 0 && stackSize > maxStack;
     }
 
     /**

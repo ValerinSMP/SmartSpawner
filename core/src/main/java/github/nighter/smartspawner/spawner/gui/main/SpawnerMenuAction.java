@@ -395,6 +395,17 @@ public class SpawnerMenuAction implements Listener {
         }
     }
 
+    // Preserve the legacy Valerin match by key, including EcoEnchants variants.
+    static boolean isMendingEnchantKey(String key) {
+        return Set.of("mending", "repairing", "repair").contains(key.toLowerCase(Locale.ROOT));
+    }
+
+    private boolean hasMendingLikeEnchantment(ItemStack item) {
+        return item.getEnchantments().keySet().stream().anyMatch(enchantment ->
+                Enchantment.MENDING.equals(enchantment)
+                        || isMendingEnchantKey(enchantment.getKey().getKey()));
+    }
+
     private long applyMendingFromExp(Player player, long availableExp) {
         if (availableExp <= 0) {
             return 0;
@@ -417,7 +428,7 @@ public class SpawnerMenuAction implements Listener {
             }
 
             if (item == null || item.getType() == Material.AIR ||
-                    !item.getEnchantments().containsKey(Enchantment.MENDING)) {
+                    !hasMendingLikeEnchantment(item)) {
                 continue;
             }
 

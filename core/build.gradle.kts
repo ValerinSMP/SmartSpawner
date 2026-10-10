@@ -74,6 +74,7 @@ dependencies {
     annotationProcessor(libs.lombok)
 
     // paper-api is here for YamlConfiguration only; nothing under test needs a live server.
+    testImplementation(project(":api"))
     testImplementation(libs.paper.api)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)

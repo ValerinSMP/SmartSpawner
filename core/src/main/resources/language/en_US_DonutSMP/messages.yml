@@ -139,3 +139,6 @@ sell_and_exp_success:
 sell_and_exp_success_with_mending:
   message: 'You sold &e{amount} &fitem(s) for &a${price}&f, collected &a{exp} &fEXP &f(&c{exp_mending} &fused on Mending).'
   action_bar: '&a+${price} &f| &a+{exp} EXP &f(&c-{exp_mending} Mending)'
+
+egg_change_stacked_not_allowed:
+  message: '&cYou cannot change this stacked spawner type. Maximum: {max_stack}; current: {current_stack}.'
