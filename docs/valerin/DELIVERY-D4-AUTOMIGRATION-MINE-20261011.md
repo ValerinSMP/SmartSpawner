@@ -117,3 +117,20 @@ perder loot/XP posterior. Tercera tabla sidecar es aditiva y versiones anteriore
 NO restaurar la DB o borrar assignments automaticamente. No revierte ventas monetarias.
 API de reciclaje/unidades/procedencia sigue DRAFT y diferida por el propietario;
 ver HANDOFF-API-D3.md. No permitir al otro plugin escribir SQL o confiar en lore/PDC.
+
+
+## Aceptacion Test y preparacion Custom
+Usuario confirma pruebas1-4 de activacion, listados, mecanicas y segundo reinicio.
+Log observado: Test habilita production.2; migracion3 bloques/unresolved0.
+Esto NO prueba latencia/TPS sobre Custom. Lectura nueva SQL ro:3354 bloques,
+23729 unidades,424 actores distintos,0 filas sin last_interacted_player.
+Plan de Custom: primer arranque observation + migration.enabled=true, conservando
+produccion nativa mientras se asigna; batches de metadatos y worker SQL/LP existentes.
+Vigilar MSPT/TPS y reconciliacion/pendientes; no activar enforce al mismo tiempo
+que la primera migracion masiva. Segundo reinicio con enforce solo tras validacion
+de cobertura/impacto/rangos y autorizacion de lifecycle por propietario.
+Durante primera migracion, guardas de propiedad pueden retener temporalmente
+rotura/stack/huevo hasta completar bootstrap; no confundir eso con TPS.
+El objetivo2ms de snapshot es presupuesto blando entre consultas; una consulta
+externa RPB puede excederlo. No garantizar lag0 ni estimar tiempo de424 lookups sin medir.
+No se instala nada en Custom por la pregunta sobre el plan.
