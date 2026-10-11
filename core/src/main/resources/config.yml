@@ -157,11 +157,15 @@ performance:
 spawner_egg_change:
   max_stack_to_allow_change: 50
 
-# Read-only stock accounting. Includes persisted rows in unloaded chunks.
-# Restart required. Minimum interval is 60 seconds. No ownership inference or limits.
+# Stock accounting and optional productive capacity. Includes unloaded chunks.
+# Production settings require restart; legacy migration is explicitly opt-in.
 production:
   # observation preserves production. enforce is approved for Test, not Custom.
   mode: observation
+  legacy-migration:
+    # Approved retrospective rule: last registered player, then protection owner.
+    # Captures the input once; no automatic owner changes on later interactions.
+    enabled: false
   farm-cap: 100
   # Effective inherited permission checks; no primary-group or OP lookup.
   # Explicit smartspawner.production.capacity.<tier> grants/denials override these.

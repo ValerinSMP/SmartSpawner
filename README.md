@@ -61,3 +61,5 @@ This project is licensed under the GPLv3 License - see the [LICENSE](LICENSE) fi
 D1 contains offline simulation and a draft interface; no recycling provider or production limits are active.
 
 [Valerin D3 Test delivery, migration and rollback](docs/valerin/DELIVERY-D3-PRODUCTION-20261011.md).
+
+[Automatic migration and player /ss mine delivery](docs/valerin/DELIVERY-D4-AUTOMIGRATION-MINE-20261011.md).

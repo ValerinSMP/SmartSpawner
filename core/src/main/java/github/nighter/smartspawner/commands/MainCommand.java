@@ -32,6 +32,7 @@ public class MainCommand {
     public MainCommand(SmartSpawner plugin) {
         this.subCommands = List.of(
                 new github.nighter.smartspawner.commands.production.ProductionSubCommand(plugin),
+                new github.nighter.smartspawner.commands.production.MineSubCommand(plugin),
                 new ReloadSubCommand(plugin),
                 new GiveSubCommand(plugin),
                 new ListSubCommand(plugin),
@@ -75,7 +76,7 @@ public class MainCommand {
 
             // For players, check the base permission
             if (sender instanceof Player player) {
-                return player.hasPermission("smartspawner.command.use") || player.isOp();
+                return player.hasPermission("smartspawner.command.use") || player.hasPermission("smartspawner.command.mine") || player.isOp();
             }
 
             // Allow other command senders (like command blocks) if they have permission

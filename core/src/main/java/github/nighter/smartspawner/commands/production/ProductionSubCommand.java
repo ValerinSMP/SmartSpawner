@@ -136,6 +136,9 @@ public final class ProductionSubCommand extends BaseSubCommand {
                 "mode", service.enforcing() ? "enforce" : "observation",
                 "state", service.state(), "productive", Long.toString(productive),
                 "duration", Long.toString(service.planningMillis())));
+        plugin.getMessageService().sendMessage(sender, "production.migration", Map.of(
+                "assigned", Integer.toString(service.legacyAssigned()),
+                "unresolved", Integer.toString(service.legacyUnresolved())));
         if (sender instanceof Player player) {
             var block = player.getTargetBlockExact(8);
             var spawner = block == null ? null : plugin.getSpawnerManager().getSpawnerByLocation(block.getLocation());

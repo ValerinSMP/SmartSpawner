@@ -293,3 +293,27 @@ editloot:
     name: '&cTỉ lệ phải là số từ 0 đến 100.'
   error_durability:
     name: '&cĐộ bền phải là số nguyên, và min không lớn hơn max.'
+
+
+mine_title: "My spawners"
+mine_item:
+  name: "&f{type}"
+  lore:
+    - "&7World: &f{world}"
+    - "&7Location: &f{x}, {y}, {z}"
+    - "&7Saved units: &f{stock}"
+    - "&7Productive: &a{productive}"
+    - "&7Held: &e{held}"
+    - "&7Assigned to your productive capacity."
+mine_previous:
+  name: "&fPrevious page"
+  lore: []
+mine_next:
+  name: "&fNext page"
+  lore: []
+mine_close:
+  name: "&fClose"
+  lore:
+    - "&7Page {page}/{pages}"
+    - "&7{blocks} blocks, {stock} units."
+    - "&7{productive} productive units."

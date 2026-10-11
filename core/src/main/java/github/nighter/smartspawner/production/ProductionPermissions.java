@@ -27,6 +27,16 @@ public final class ProductionPermissions implements AutoCloseable {
         acquired.forEach((id, user) -> permissions.getUserManager().cleanupUser(user));
         acquired.clear();
     }
+    public UUID resolveName(String name) throws Exception {
+        if (name == null || name.isBlank()) return null;
+        try { return UUID.fromString(name); }
+        catch (IllegalArgumentException notUuid) {
+            if (name.length()>64 || name.chars().anyMatch(Character::isISOControl)) return null;
+            try { return permissions.getUserManager().lookupUniqueId(name).get(10, TimeUnit.SECONDS); }
+            catch (IllegalArgumentException invalidName) { return null; }
+        }
+    }
+
     public Integer quota(UUID owner, String world) {
         try {
             var user = permissions.getUserManager().getUser(owner);

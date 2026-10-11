@@ -18,6 +18,7 @@ softdepend:
   - Vault
 
   # Protection/Region Plugins
+  - RoyaleProtectionBlocks
   - WorldGuard
   - GriefPrevention
   - Lands
@@ -71,6 +72,9 @@ permissions:
   smartspawner.production.capacity.100:
     description: Per-type production capacity 100
     default: false
+  smartspawner.command.mine:
+    description: View only spawners assigned to your own productive capacity
+    default: true
   smartspawner.command.production:
     description: View persisted stock observation
     default: op

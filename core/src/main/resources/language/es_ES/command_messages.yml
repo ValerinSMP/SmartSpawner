@@ -256,3 +256,11 @@ production:
     message: "Propiedad y granja guardadas. El origen del legado sigue sin certificar."
   assignment_failed:
     message: "Asignacion no confirmada; bloque retenido. Reintenta la asignacion antes de continuar."
+  migration:
+    message: "Migracion automatica: {assigned} bloques asignados en este arranque; {unresolved} pendientes."
+
+mine:
+  pending:
+    message: "El registro de tus spawners se esta preparando. Intenta de nuevo en unos segundos."
+  empty:
+    message: "Aun no tienes spawners asignados a tu cupo. La migracion puede estar pendiente."

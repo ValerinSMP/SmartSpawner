@@ -256,3 +256,11 @@ production:
     message: "Ownership and farm saved. Legacy origin is still unverified."
   assignment_failed:
     message: "Assignment unconfirmed; block fenced. Retry the assignment before continuing."
+  migration:
+    message: "Automatic migration: {assigned} blocks assigned this startup; {unresolved} unresolved."
+
+mine:
+  pending:
+    message: "Your spawner register is being prepared. Try again in a few seconds."
+  empty:
+    message: "No placed spawners are assigned to your capacity yet. Migration may still be pending."

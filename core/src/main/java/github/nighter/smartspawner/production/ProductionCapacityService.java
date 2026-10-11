@@ -16,12 +16,16 @@ public final class ProductionCapacityService implements AutoCloseable {
     private final ProductionObserver.Connections connections;
     private final ProductionOwnershipRepository repository;
     private final ProductionPermissions permissions;
+    private final ProductionProtectionSnapshot protectionSnapshot;
+    private final boolean legacyMigration;
+    private volatile int legacyAssigned, legacyUnresolved;
     private final ScheduledExecutorService worker;
     private final Logger logger;
     private final AutoCloseable permissionSubscription;
     private final boolean enforcing;
     private final int farmCap, span, spatialCap;
     private final ConcurrentMap<String, ProductionCapacityPlanner.Stock> overlay = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String,Integer> heights = new ConcurrentHashMap<>();
     private final Set<String> removed = ConcurrentHashMap.newKeySet();
     private final Set<String> inFlightAssignments = ConcurrentHashMap.newKeySet();
     private final Set<String> pendingAssignments = ConcurrentHashMap.newKeySet();
@@ -43,6 +47,8 @@ public final class ProductionCapacityService implements AutoCloseable {
         this.connections = plugin.getDatabaseManager()::getConnection;
         this.repository = new ProductionOwnershipRepository(plugin.getDatabaseManager().getTableSpawners());
         this.enforcing = enforcing;
+        this.legacyMigration = plugin.getConfig().getBoolean("production.legacy-migration.enabled", false);
+        this.protectionSnapshot = new ProductionProtectionSnapshot(plugin);
         this.farmCap = farmCap;
         this.span = span;
         this.spatialCap = spatialCap;
@@ -77,14 +83,49 @@ public final class ProductionCapacityService implements AutoCloseable {
             repository.initialize(connection);
             owners = repository.owners(connection);
             persisted = repository.stock(connection, owners);
+            repository.heights(connection).forEach(heights::putIfAbsent);
+            if (legacyMigration && !plugin.getDatabaseManager().isCrossServer()) {
+                migrateLegacy(connection);
+                owners = repository.owners(connection);
+            }
             ownershipLoaded = true;
             plan();
         } catch (Exception failure) {
             ready = false;
-            state = "STORAGE_UNAVAILABLE";
+            state = "MIGRATING_LEGACY".equals(state) ? "MIGRATION_UNAVAILABLE" : "STORAGE_UNAVAILABLE";
             logger.warning("Production accounting unavailable; enforcement holds production, stock is preserved.");
         }
     }
+
+    private void migrateLegacy(Connection connection) throws Exception {
+        var rows = repository.legacyRows(connection).stream().filter(row -> {
+            var prior = owners.get(row.id());
+            return !removed.contains(row.id()) && !pendingAssignments.contains(row.id())
+                    && (prior == null || prior.owner() == null || prior.farm() == null);
+        }).toList();
+        if (rows.isEmpty()) { legacyUnresolved = 0; return; }
+        ready = false;
+        state = "MIGRATING_LEGACY";
+        var claims = protectionSnapshot.snapshot(rows).get(120, TimeUnit.SECONDS);
+        Map<String, UUID> names = new HashMap<>();
+        int assigned = 0, unresolved = 0;
+        for (var row : rows) {
+            if (closed) return;
+            if (removed.contains(row.id()) || pendingAssignments.contains(row.id())) continue;
+            String name = row.lastPlayer() == null ? "" : row.lastPlayer().toLowerCase(Locale.ROOT);
+            if (!names.containsKey(name)) names.put(name, permissions == null ? null : permissions.resolveName(name));
+            var decision = LegacyProductionMigration.decide(repositoryAuthority(), row, names.get(name),
+                    claims.getOrDefault(row.id(), LegacyProductionMigration.Claim.none()), owners.get(row.id()));
+            if (decision == null) { unresolved++; continue; }
+            if (repository.assignMigrated(connection, row.id(), decision)) assigned++;
+        }
+        legacyAssigned += assigned;
+        if (assigned > 0 || legacyUnresolved != unresolved) logger.info("Production migration: assigned "
+                + assigned + " blocks; unresolved " + unresolved + ". Retrospective assignment, unverified provenance.");
+        legacyUnresolved = unresolved;
+    }
+
+    private String repositoryAuthority() { return plugin.getDatabaseManager().getTableSpawners(); }
 
     private void plan() {
         if (closed) return;
@@ -157,6 +198,7 @@ public final class ProductionCapacityService implements AutoCloseable {
         var location = spawner.getSpawnerLocation();
         var value = new ProductionCapacityPlanner.Stock(spawner.getSpawnerId(), location.getWorld().getName(),
                 location.getBlockX(), location.getBlockZ(), type(spawner), null, null, spawner.getStackSize());
+        heights.put(value.id(), location.getBlockY());
         removed.remove(value.id());
         var previous = overlay.put(value.id(), value);
         if (!value.equals(previous)) {
@@ -167,6 +209,7 @@ public final class ProductionCapacityService implements AutoCloseable {
 
     public void remove(String id) {
         overlay.remove(id);
+        heights.remove(id);
         removed.add(id); // A stale persisted row cannot reappear before its normal deletion flush.
         changes.incrementAndGet();
         requestPlan();
@@ -179,7 +222,42 @@ public final class ProductionCapacityService implements AutoCloseable {
     /** Called after a placement on the block region; unmarked legacy remains unresolved. */
     public void placed(SpawnerData spawner, ProductionOwnershipRepository.Ownership declaration) {
         touch(spawner);
-        if (declaration.owner() != null) assign(spawner.getSpawnerId(), declaration, "RETAINED_DECLARATION");
+        if (!legacyMigration) {
+            if (declaration.owner() != null) assign(spawner.getSpawnerId(), declaration, "RETAINED_DECLARATION");
+            return;
+        }
+        String id = spawner.getSpawnerId();
+        var location = spawner.getSpawnerLocation();
+        var row = new LegacyProductionMigration.Row(id, location.getWorld().getName(), location.getBlockX(),
+                location.getBlockY(), location.getBlockZ(), spawner.getLastInteractedPlayer());
+        pendingAssignments.add(id);
+        changes.incrementAndGet();
+        protectionSnapshot.snapshot(List.of(row)).whenComplete((claims, failure) -> {
+            if (closed) return;
+            worker.execute(() -> {
+                if (closed || removed.contains(id)) return;
+                try {
+                    if (failure != null) throw new IllegalStateException("Protection snapshot unavailable", failure);
+                    var prior = owners.get(id);
+                    if (prior != null && prior.owner() != null && prior.farm() != null) return; // Manual confirmation wins.
+                    // Physical farm is rebound at the new location; carried farm IDs cannot multiply one protection's budget.
+                    if (prior == null) prior = new ProductionOwnershipRepository.Ownership(declaration.owner(), null);
+                    UUID last = prior.owner() != null ? null : permissions == null ? null : permissions.resolveName(row.lastPlayer());
+                    var decision = LegacyProductionMigration.decide(repositoryAuthority(), row, last, claims.get(id), prior);
+                    if (decision == null) {
+                        pendingAssignments.remove(id);
+                        requestPlan();
+                        return;
+                    }
+                    assign(id, decision.ownership(), declaration.owner() != null
+                            ? "RETAINED_OWNER_AUTO_FARM" : "NEW_PLACER_DECLARATION");
+                } catch (Exception unavailable) {
+                    ready = false;
+                    state = "ASSIGNMENT_UNCONFIRMED";
+                    logger.warning("Automatic placement assignment unavailable; stock retained for retry.");
+                }
+            });
+        });
     }
 
     public CompletableFuture<Void> assign(String id, ProductionOwnershipRepository.Ownership ownership, String kind) {
@@ -258,6 +336,32 @@ public final class ProductionCapacityService implements AutoCloseable {
         return owner == null ? null : resolvedQuotas.get(new ProductionCapacityPlanner.Context(owner,
                 spawner.getSpawnerLocation().getWorld().getName()));
     }
+    public CompletableFuture<OwnSpawnerListing.Page> ownListing(UUID viewer,int page) {
+        if (closed || !ownershipLoaded) return CompletableFuture.failedFuture(new IllegalStateException("Accounting pending"));
+        return CompletableFuture.supplyAsync(() -> {
+            Map<String,ProductionCapacityPlanner.Stock> stock=new HashMap<>(persisted);
+            stock.putAll(overlay);
+            removed.forEach(stock::remove);
+            var ownership=owners;
+            var allocation=grants;
+            boolean valid=ready;
+            List<OwnSpawnerListing.Entry> entries=new ArrayList<>();
+            for(var value:stock.values()) {
+                var owner=ownership.get(value.id());
+                if(owner==null || !viewer.equals(owner.owner())) continue;
+                var grant=allocation.get(value.id());
+                int productive=!enforcing?value.quantity():!valid || pendingAssignments.contains(value.id()) || grant==null
+                        || !Objects.equals(owner.owner(),grant.stock().owner()) || !Objects.equals(owner.farm(),grant.stock().farm())
+                        || !value.type().equals(grant.stock().type()) ? 0 : Math.min(value.quantity(),grant.productive());
+                entries.add(new OwnSpawnerListing.Entry(value.id(),owner.owner(),value.world(),value.x(),
+                        heights.getOrDefault(value.id(),0),value.z(),value.type(),value.quantity(),productive));
+            }
+            return OwnSpawnerListing.page(viewer,entries,page);
+        },worker);
+    }
+
+    public int legacyAssigned() { return legacyAssigned; }
+    public int legacyUnresolved() { return legacyUnresolved; }
     public boolean enforcing() { return enforcing; }
     public String state() { return state; }
     public long planningMillis() { return planningMillis; }
@@ -269,6 +373,7 @@ public final class ProductionCapacityService implements AutoCloseable {
             try { permissionSubscription.close(); }
             catch (Exception failure) { logger.warning("Production permission subscription cleanup failed."); }
         }
+        protectionSnapshot.close();
         worker.shutdownNow();
     }
 }

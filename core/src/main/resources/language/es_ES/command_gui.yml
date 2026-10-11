@@ -293,3 +293,27 @@ editloot:
     name: '&cLa probabilidad debe ser un número del 0 al 100.'
   error_durability:
     name: '&cLa durabilidad debe ser un número entero, y el mínimo no puede superar al máximo.'
+
+
+mine_title: "Mis spawners"
+mine_item:
+  name: "&f{type}"
+  lore:
+    - "&7Mundo: &f{world}"
+    - "&7Ubicacion: &f{x}, {y}, {z}"
+    - "&7Unidades conservadas: &f{stock}"
+    - "&7Productivas: &a{productive}"
+    - "&7Retenidas: &e{held}"
+    - "&7Asignadas a tu cupo productivo."
+mine_previous:
+  name: "&fPagina anterior"
+  lore: []
+mine_next:
+  name: "&fPagina siguiente"
+  lore: []
+mine_close:
+  name: "&fCerrar"
+  lore:
+    - "&7Pagina {page}/{pages}"
+    - "&7{blocks} bloques, {stock} unidades."
+    - "&7{productive} unidades productivas."

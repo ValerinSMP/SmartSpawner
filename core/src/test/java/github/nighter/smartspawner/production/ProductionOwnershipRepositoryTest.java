@@ -67,4 +67,42 @@ class ProductionOwnershipRepositoryTest {
             assertTrue(connection.getAutoCommit());
         }
     }
+    @Test void migrationInputIsDurableAndDoesNotFollowLaterVisitors(@TempDir Path directory) throws Exception {
+        String url = "jdbc:sqlite:" + directory.resolve("migration.db");
+        var repository = new ProductionOwnershipRepository("stock");
+        try (var connection = DriverManager.getConnection(url)) {
+            source(connection);
+            connection.createStatement().execute("ALTER TABLE stock ADD COLUMN loc_y INTEGER DEFAULT 12");
+            connection.createStatement().execute("ALTER TABLE stock ADD COLUMN last_interacted_player TEXT");
+            connection.createStatement().execute("UPDATE stock SET last_interacted_player='FirstPlayer'");
+            repository.initialize(connection);
+            assertEquals("FirstPlayer", repository.legacyRows(connection).getFirst().lastPlayer());
+            connection.createStatement().execute("UPDATE stock SET last_interacted_player='LaterVisitor'");
+        }
+        try (var connection = DriverManager.getConnection(url)) {
+            assertEquals("FirstPlayer", repository.legacyRows(connection).getFirst().lastPlayer());
+            assertEquals(12, repository.legacyRows(connection).getFirst().y());
+            assertEquals(150, repository.stock(connection,repository.owners(connection)).get("legacy").quantity());
+        }
+    }
+
+    @Test void automatedMigrationIsIdempotentAndNeverOverwritesAConfirmedOwner() throws Exception {
+        try (var connection = DriverManager.getConnection("jdbc:sqlite::memory:")) {
+            source(connection);
+            var repository = new ProductionOwnershipRepository("stock");
+            repository.initialize(connection);
+            var decision = new LegacyProductionMigration.Decision(
+                    new ProductionOwnershipRepository.Ownership(OWNER,FARM),"LEGACY_LAST_INTERACTOR");
+            assertTrue(repository.assignMigrated(connection,"legacy",decision));
+            assertFalse(repository.assignMigrated(connection,"legacy",decision));
+            var different = new LegacyProductionMigration.Decision(
+                    new ProductionOwnershipRepository.Ownership(new UUID(0,5),FARM),"LEGACY_PROTECTION_OWNER");
+            assertFalse(repository.assignMigrated(connection,"legacy",different));
+            assertEquals(OWNER,repository.owners(connection).get("legacy").owner());
+            var history=connection.createStatement().executeQuery("SELECT COUNT(*) FROM stock_production_owner_events_v1");
+            assertTrue(history.next()); assertEquals(1,history.getInt(1));
+            assertEquals(150,repository.stock(connection,repository.owners(connection)).get("legacy").quantity());
+        }
+    }
+
 }
