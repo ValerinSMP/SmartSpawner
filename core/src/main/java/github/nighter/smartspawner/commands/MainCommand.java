@@ -31,6 +31,7 @@ public class MainCommand {
 
     public MainCommand(SmartSpawner plugin) {
         this.subCommands = List.of(
+                new github.nighter.smartspawner.commands.production.ProductionSubCommand(plugin),
                 new ReloadSubCommand(plugin),
                 new GiveSubCommand(plugin),
                 new ListSubCommand(plugin),

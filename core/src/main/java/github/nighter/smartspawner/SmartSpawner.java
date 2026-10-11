@@ -131,6 +131,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     // Core managers
     private SpawnerStorage spawnerStorage;
     private DatabaseManager databaseManager;
+    private github.nighter.smartspawner.production.ProductionObserver productionObserver;
     private SpawnerManager spawnerManager;
     private HopperService hopperService;
     private HopperConfig hopperConfig;
@@ -193,6 +194,13 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
                     + "Fix the database settings in config.yml, then restart the server.");
             getServer().getPluginManager().disablePlugin(this);
             return;
+        }
+
+        // Observation is read-only and configured at restart; no capacity enforcement.
+        if (getConfig().getBoolean("production.observation.enabled", true)) {
+            this.productionObserver = new github.nighter.smartspawner.production.ProductionObserver(
+                    databaseManager::getConnection, databaseManager.getTableSpawners(),
+                    getConfig().getLong("production.observation.interval-seconds", 60), getLogger());
         }
 
         // Setup plugin infrastructure
@@ -600,6 +608,9 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     }
 
     private void saveAndCleanup() {
+        if (productionObserver != null) {
+            productionObserver.close();
+        }
         if (spawnerManager != null) {
             try {
                 // Use the storage interface for shutdown

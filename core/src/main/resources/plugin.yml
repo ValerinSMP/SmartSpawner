@@ -52,6 +52,9 @@ commands:
     permission-message: "You don't have permission to use SmartSpawner commands!"
 
 permissions:
+  smartspawner.command.production:
+    description: View persisted stock observation
+    default: op
   # Main command permission
   smartspawner.command.use:
     description: Allow access to SmartSpawner commands

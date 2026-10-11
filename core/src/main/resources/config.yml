@@ -156,3 +156,10 @@ performance:
 # A value <= 0 disables the stack restriction.
 spawner_egg_change:
   max_stack_to_allow_change: 1
+
+# Read-only stock accounting. Includes persisted rows in unloaded chunks.
+# Restart required. Minimum interval is 60 seconds. No ownership inference or limits.
+production:
+  observation:
+    enabled: true
+    interval-seconds: 60

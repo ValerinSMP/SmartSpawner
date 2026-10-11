@@ -230,3 +230,15 @@ editloot:
   capture_empty:
     message: "&#FF4444Pon primero un objeto en la ranura central."
     sound: block.note_block.bass
+
+production:
+  disabled:
+    message: "Observacion desactivada; requiere reinicio para cambiarla."
+  pending:
+    message: "Primera observacion pendiente."
+  unavailable:
+    message: "Observacion no disponible; no se muestran datos antiguos como actuales."
+  summary:
+    message: "Observacion local: {blocks} bloques, {units} unidades guardadas, {invalid} bloques invalidos. Antiguedad {age}s; consulta {duration}ms. Propiedad sin resolver; limites inactivos. Cambios recientes esperan el guardado normal."
+  type:
+    message: "{type}: {blocks} bloques, {units} unidades guardadas."

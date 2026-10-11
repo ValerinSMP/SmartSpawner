@@ -230,3 +230,15 @@ editloot:
   capture_empty:
     message: "&#FF4444Hãy đặt một vật phẩm vào ô giữa trước."
     sound: block.note_block.bass
+
+production:
+  disabled:
+    message: "Observation disabled; changing it requires restart."
+  pending:
+    message: "First observation pending."
+  unavailable:
+    message: "Observation unavailable; stale stock is not presented as current."
+  summary:
+    message: "Local observation: {blocks} blocks, {units} saved units, {invalid} invalid blocks. Age {age}s; query {duration}ms. Ownership unresolved; limits inactive. Recent changes await normal autosave."
+  type:
+    message: "{type}: {blocks} blocks, {units} saved units."
