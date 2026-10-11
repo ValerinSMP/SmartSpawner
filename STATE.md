@@ -29,3 +29,5 @@ DEVELOPMENT_HANDOFF.md ajeno intacto/untracked SHA256
 4df0d596f2b4c23c983c4c8721cfa518bb78b5606038d4d9110af8e5e42dcb48.
 Lecturas SQLite vivas siempre con usuario servidor pterodactyl/UID999 para no crear WAL
 con dueño incorrecto. Rollback conserva datos posteriores; restaurar solo JAR .3 autorizado.
+
+Ajuste autorizado posterior: Custom config spawner_properties.default.max_stack_size=50; /ss reload ejecutado correctamente 21:32:17Z, sin reinicio. Reload llama loadConfigurationValues para spawners actuales (incluye maxStackSize); el cambio de dueño/solapamientos .4 sigue pendiente del reinicio diario. Config SHA25618f3ac2d0d8c51e111d42e3df9dd2605110bba8470ef773ea32a03da15b7c07b. Backup HDD smartspawner-stack50-20261011T213217Z. Sin cambios de código/JAR ni SQL directo. Gameplay apilado50 pendiente.
