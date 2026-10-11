@@ -17,3 +17,8 @@ DEVELOPMENT_HANDOFF.md sin seguimiento SHA2564df0d596f2b4c23c983c4c8721cfa518bb7
 Entrega/migración/rollback/aceptación: docs/valerin/DELIVERY-D2-OBSERVATION-20261011.md.
 Sin escrituras SQL, instalación o lifecycle de producción. Mending/huevos intactos.
 Siguiente: ledger de propiedad/custodia con migración y luego API/enforcement.
+
+Instalacion 2026-10-11: observe.1 instalado solo en Test detenido, hash verificado.
+No activado/gameplay; propietario arranca. Backup JAR+datos verificado en HDD HomeSV:
+/mnt/storage/backups/ai/survival-custom/smartspawner-test-observe-20261011T160700Z.
+Config/datos preservados; Custom sin cambios.
