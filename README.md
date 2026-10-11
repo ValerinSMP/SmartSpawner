@@ -54,3 +54,8 @@ On Windows, use `gradlew.bat :core:shadowJar`. The compiled plugin JAR will be a
 ## License
 
 This project is licensed under the GPLv3 License - see the [LICENSE](LICENSE) file for details.
+
+## Valerin development contract
+
+[Production ownership and unit API draft](docs/valerin/PRODUCTION-OWNERSHIP-API-V1.md).
+D1 contains offline simulation and a draft interface; no recycling provider or production limits are active.

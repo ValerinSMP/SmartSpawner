@@ -1,0 +1,143 @@
+{
+  "snapshot_utc": "2026-10-11T15:39:50.700072+00:00",
+  "method": "Single read-only SQLite transaction including WAL; all durable placements, irrespective of loaded chunks or activators.",
+  "live_total_blocks": 3359,
+  "live_total_units": 23722,
+  "invalid_rows": 0,
+  "ownership": "No durable owner exists; property-holder attribution is not ownership certification.",
+  "rank_policy": {
+    "default": 50,
+    "guardian": 60,
+    "ascendido": 70,
+    "arcano": 80,
+    "elite": 90,
+    "leyenda": 100
+  },
+  "historical_owner_snapshot": "2026-10-11T13:07:51.427996+00:00",
+  "historical_unattributed_units": 497,
+  "historical_permission_context_pending": 166,
+  "historical_sensitivity": [
+    {
+      "non_legend_scenario_cap": 50,
+      "legend_cap": 100,
+      "estimated_hold": 7714,
+      "affected_protection_holders": 27
+    },
+    {
+      "non_legend_scenario_cap": 60,
+      "legend_cap": 100,
+      "estimated_hold": 7557,
+      "affected_protection_holders": 25
+    },
+    {
+      "non_legend_scenario_cap": 70,
+      "legend_cap": 100,
+      "estimated_hold": 7466,
+      "affected_protection_holders": 20
+    },
+    {
+      "non_legend_scenario_cap": 80,
+      "legend_cap": 100,
+      "estimated_hold": 7416,
+      "affected_protection_holders": 20
+    },
+    {
+      "non_legend_scenario_cap": 90,
+      "legend_cap": 100,
+      "estimated_hold": 7373,
+      "affected_protection_holders": 20
+    },
+    {
+      "non_legend_scenario_cap": 100,
+      "legend_cap": 100,
+      "estimated_hold": 7333,
+      "affected_protection_holders": 20
+    }
+  ],
+  "spatial_proposals": [
+    {
+      "span": 32,
+      "integer_side": 33,
+      "cap": 100,
+      "candidate_windows": 5482,
+      "overloaded_candidate_windows": 1570,
+      "maximum_window_stock": 3107,
+      "minimum_hold_required_in_densest_window": 3007
+    },
+    {
+      "span": 32,
+      "integer_side": 33,
+      "cap": 150,
+      "candidate_windows": 5482,
+      "overloaded_candidate_windows": 1334,
+      "maximum_window_stock": 3107,
+      "minimum_hold_required_in_densest_window": 2957
+    },
+    {
+      "span": 32,
+      "integer_side": 33,
+      "cap": 200,
+      "candidate_windows": 5482,
+      "overloaded_candidate_windows": 1128,
+      "maximum_window_stock": 3107,
+      "minimum_hold_required_in_densest_window": 2907
+    },
+    {
+      "span": 48,
+      "integer_side": 49,
+      "cap": 100,
+      "candidate_windows": 6554,
+      "overloaded_candidate_windows": 1875,
+      "maximum_window_stock": 3107,
+      "minimum_hold_required_in_densest_window": 3007
+    },
+    {
+      "span": 48,
+      "integer_side": 49,
+      "cap": 150,
+      "candidate_windows": 6554,
+      "overloaded_candidate_windows": 1643,
+      "maximum_window_stock": 3107,
+      "minimum_hold_required_in_densest_window": 2957
+    },
+    {
+      "span": 48,
+      "integer_side": 49,
+      "cap": 200,
+      "candidate_windows": 6554,
+      "overloaded_candidate_windows": 1391,
+      "maximum_window_stock": 3107,
+      "minimum_hold_required_in_densest_window": 2907
+    }
+  ],
+  "chunk_comparison": [
+    {
+      "cap": 50,
+      "chunks_over": 75,
+      "excess_units": 16724
+    },
+    {
+      "cap": 100,
+      "chunks_over": 48,
+      "excess_units": 13697
+    },
+    {
+      "cap": 150,
+      "chunks_over": 38,
+      "excess_units": 11487
+    },
+    {
+      "cap": 200,
+      "chunks_over": 30,
+      "excess_units": 9842
+    }
+  ],
+  "caveats": [
+    "Spatial figures and rank sensitivity overlap; never add their excesses.",
+    "Overloaded windows overlap. Counts are not farms or people and their excesses cannot be summed.",
+    "Windows are occupied-coordinate extremal candidates; exact maximum, not a count of every possible geometric window.",
+    "No actual production/income measured; live and historical snapshots differ.",
+    "Rank sensitivity is a range over old protection-holder attribution, not a simulation with new effective permissions.",
+    "Neither production nor inventory, loot, XP, SQL schema, permissions or servers were modified."
+  ]
+}

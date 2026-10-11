@@ -1,0 +1,26 @@
+# Propuesta revisable D1. NO leída por el runtime del JAR.
+# Escala confirmada en este chat; geometría y cifras espaciales pendientes.
+mode: observation
+scope: responsible-base-type
+base-units-per-type: 50
+effective-permission-tiers:
+  smartspawner.production.capacity.60: 60
+  smartspawner.production.capacity.70: 70
+  smartspawner.production.capacity.80: 80
+  smartspawner.production.capacity.90: 90
+  smartspawner.production.capacity.100: 100
+# Mapeo documental. El código futuro consulta permisos, no grupos.
+rank-grant-proposal:
+  default: 50
+  guardian: 60
+  ascendido: 70
+  arcano: 80
+  elite: 90
+  leyenda: 100
+spatial:
+  enabled: false
+  span-blocks: null
+  capacity-units: null
+farm:
+  enabled: false
+  capacity-units: null
