@@ -42,4 +42,5 @@ Nuevo candidato NO instalado/activo. Sin lifecycle ni cambios en producción,
 datos, loot, XP, permisos o esquema. Propietario realiza reinicios/recargas.
 Siguiente incremento: contabilidad durable y modo de observación sin limitar,
 después identidad/custodia/API, luego enforcement tras revisión espacial.
-Push pendiente si continúa ausencia de autenticación HTTPS en personal.
+Commit D1 9213376694fa9b0e7617dd26c22997af3ca2f89e publicado con push normal
+a github/work/valerin-production-contract-v1; sin force-push.
