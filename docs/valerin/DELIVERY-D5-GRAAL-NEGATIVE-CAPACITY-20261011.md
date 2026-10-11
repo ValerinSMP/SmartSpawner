@@ -24,3 +24,6 @@ capacidad>=0, bloque productive dentro de0..stock, produccion real, TPS y guarda
 182legacy unresolved anteriores se conservan; no se inventan asignaciones.
 Rollback: observation requiere reinicio propietario; restaurar JAR anterior devuelve bug
 en este GraalVM. Preservar DB y sidecars, no restaurar backup de DB por rutina.
+
+## Activacion verificada
+Reinicio propietario19:20:20Z; production.3 enable16:21:23. Usuario16:23:21: READY/enforce/capacidad6918/plan156ms y bloque stock1/cupo50/productive1. Correccion de negativos confirmada en runtime. Snapshot3354/23729 intacto;3172asignados,182pendientes,0 nuevas asignaciones este arranque(no perdida de legado). Gameplay acumulacion de loot real todavia pendiente.
