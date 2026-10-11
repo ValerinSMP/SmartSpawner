@@ -7,7 +7,12 @@ public final class ProductionCapacityPlanner {
     public record Stock(String id, String world, int x, int z, String type,
                         UUID owner, UUID farm, int quantity) {}
     public record Context(UUID owner, String world) {}
-    public record Grant(Stock stock, int productive, String reason) {}
+    public record Grant(Stock stock, int productive, String reason) {
+        public Grant {
+            if (productive < 0 || productive > Math.max(0, stock.quantity()))
+                throw new IllegalArgumentException("Production allocation outside conserved stock");
+        }
+    }
     private ProductionCapacityPlanner() {}
 
     public static Map<String, Grant> allocate(Collection<Stock> stock,
@@ -78,7 +83,12 @@ public final class ProductionCapacityPlanner {
             for (int j = 0; j < span; j++) {
                 long occupied = prefix[i + span][j + span] - prefix[i][j + span]
                         - prefix[i + span][j] + prefix[i][j];
-                free = (int) Math.min(free, Math.max(0L, cap - occupied));
+                // Keep the long comparison explicit. GraalVM 25.0.3 miscompiles
+                // the nested min/max plus narrowing conversion after this loop warms up.
+                // Reproduced with the deployed JAR; interpreter and HotSpot C2 agree.
+                long remaining = (long) cap - occupied;
+                if (remaining <= 0L) return 0;
+                if (remaining < free) free = (int) remaining;
             }
         }
         return free;

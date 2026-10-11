@@ -138,4 +138,35 @@ class ProductionCapacityPlannerTest {
             }
         }
     }
+
+    @Test void warmedSpatialWindowsNeverEmitNegativeCapacity() {
+        var entries = new ArrayList<ProductionCapacityPlanner.Stock>();
+        var quotas = new HashMap<ProductionCapacityPlanner.Context, Integer>();
+        for (int group = 0; group < 96; group++) {
+            UUID owner = new UUID(2, group + 1), farm = new UUID(3, group + 1);
+            quotas.put(new ProductionCapacityPlanner.Context(owner, "world"), 100);
+            String id = String.format("%03d", group);
+            int x = group * 100 - 4800;
+            entries.add(stock(id + "a", "world", x, 0, "MOB:BLAZE", owner, farm, 80));
+            entries.add(stock(id + "b", "world", x + 32, 32, "MOB:ZOMBIE", owner, farm, 21));
+            entries.add(stock(id + "c", "world", x + 16, 16, "MOB:SKELETON", owner, farm, 5));
+        }
+        for (int warmup = 0; warmup < 16; warmup++) {
+            var plan = ProductionCapacityPlanner.allocate(entries, quotas, 100, 33, 100);
+            assertEquals(9600, total(plan));
+            for (var grant : plan.values()) {
+                assertTrue(grant.productive() >= 0);
+                assertTrue(grant.productive() <= grant.stock().quantity());
+                assertEquals(grant.stock().id().endsWith("a") ? 80
+                        : grant.stock().id().endsWith("b") ? 20 : 0, grant.productive());
+            }
+        }
+    }
+
+    @Test void invalidGrantCannotBePublishedAsReady() {
+        var entry = stock("a", "world", 0, 0, "MOB:BLAZE", OWNER, FARM, 25);
+        assertThrows(IllegalArgumentException.class, () -> new ProductionCapacityPlanner.Grant(entry, -1, "STOCK_HELD"));
+        assertThrows(IllegalArgumentException.class, () -> new ProductionCapacityPlanner.Grant(entry, 26, "PRODUCTIVE"));
+        assertEquals(0, new ProductionCapacityPlanner.Grant(entry, 0, "STOCK_HELD").productive());
+    }
 }

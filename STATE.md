@@ -22,3 +22,5 @@ Lectura actual Custom:3354 bloques,23729 unidades,424 actores distintos; cero la
 Test log confirma migracion3 bloques/unresolved0; no equivale a prueba de escala Custom.
 
 Custom segundo reinicio propietario 18:56:55Z: SQLite recuperado tras permisos WAL/SHM y conexiones renovadas. Migracion3172 asignados/182 pendientes (log15:59:41); checkpoint3354. TPS reciente20.1/MSPT44-47, workers idle. Pendiente READY/cupos/gameplay y182 pendientes. Cierre anterior10 filas sucias fallaron SQLITE_READONLY: ultimos cambios no confirmados, sin restaurar DB. Lecturas SQLite futuras con UID servidor999/GID987.
+
+D5 production.3 instalada Custom autorizada, sin lifecycle: corrige negativos reproducidos GraalVM25.0.3 espacial.143tests y simulacion3354/seisrangos sin negativos. SHA256df2d31ce7653e0cc10999f811c95d2d8aec11c101a7f62a1c12fe1db2709a03e. Backup HDD smartspawner-custom-graal-fix-20261011T191605Z; config intacta/SQLite snapshot3354/23729. Activo aun .2; propietario reinicia. Contrato docs/valerin/DELIVERY-D5-GRAAL-NEGATIVE-CAPACITY-20261011.md.
