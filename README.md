@@ -63,3 +63,8 @@ D1 contains offline simulation and a draft interface; no recycling provider or p
 [Valerin D3 Test delivery, migration and rollback](docs/valerin/DELIVERY-D3-PRODUCTION-20261011.md).
 
 [Automatic migration and player /ss mine delivery](docs/valerin/DELIVERY-D4-AUTOMIGRATION-MINE-20261011.md).
+
+Current Valerin delivery: production.4 is staged on Custom for the owner's daily restart.
+Fresh blocks belong to their placer; adding to someone else's stack is rejected. Overlapping
+protection roots share one durable farm budget. Existing confirmed owners remain unchanged.
+[Overlap/placer migration, validation and rollback](docs/valerin/DELIVERY-D6-OVERLAP-PLACER-20261011.md).

@@ -11,16 +11,20 @@ public final class ProductionOwnershipRepository {
     private final String table;
     private final String history;
     private final String legacyInputs;
+    private final String farmLinks;
     public ProductionOwnershipRepository(String source) {
         if (!source.matches("[A-Za-z0-9_]+")) throw new IllegalArgumentException("Unsafe table");
         this.source = source;
         this.table = source + "_production_owners_v1";
         this.history = source + "_production_owner_events_v1";
         this.legacyInputs = source + "_production_legacy_inputs_v1";
+        this.farmLinks = source + "_production_farm_links_v1";
     }
 
     public void initialize(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE IF NOT EXISTS " + farmLinks + " (left_uuid VARCHAR(36) NOT NULL,"
+                    + "right_uuid VARCHAR(36) NOT NULL, PRIMARY KEY (left_uuid,right_uuid))");
             statement.execute("CREATE TABLE IF NOT EXISTS " + table + " ("
                     + "spawner_id VARCHAR(64) PRIMARY KEY, owner_uuid VARCHAR(36), farm_uuid VARCHAR(36),"
                     + "assignment_kind VARCHAR(32) NOT NULL, updated_at BIGINT NOT NULL)");
@@ -34,6 +38,32 @@ public final class ProductionOwnershipRepository {
                     + "new_owner_uuid VARCHAR(36), new_farm_uuid VARCHAR(36),"
                     + "assignment_kind VARCHAR(32) NOT NULL, updated_at BIGINT NOT NULL)");
         }
+    }
+
+    public List<ProductionFarmGroups.Link> farmLinks(Connection connection) throws SQLException {
+        List<ProductionFarmGroups.Link> result = new ArrayList<>();
+        try (Statement query = connection.createStatement(); ResultSet rows = query.executeQuery(
+                "SELECT left_uuid,right_uuid FROM " + farmLinks)) {
+            while (rows.next()) result.add(new ProductionFarmGroups.Link(UUID.fromString(rows.getString(1)),UUID.fromString(rows.getString(2))));
+        }
+        return List.copyOf(result);
+    }
+    public void linkFarms(Connection connection, Collection<ProductionFarmGroups.Link> links) throws SQLException {
+        boolean auto = connection.getAutoCommit();
+        connection.setAutoCommit(false);
+        try (PreparedStatement insert = connection.prepareStatement("INSERT INTO " + farmLinks
+                + " (left_uuid,right_uuid) SELECT ?,? WHERE NOT EXISTS (SELECT 1 FROM " + farmLinks
+                + " WHERE left_uuid=? AND right_uuid=?)")) {
+            for (var link : links) {
+                String a = link.left().toString(), b = link.right().toString();
+                if (a.equals(b)) continue;
+                if (a.compareTo(b) > 0) { String swap=a; a=b; b=swap; }
+                insert.setString(1,a); insert.setString(2,b); insert.setString(3,a); insert.setString(4,b);
+                insert.addBatch();
+            }
+            insert.executeBatch(); connection.commit();
+        } catch (SQLException failure) { connection.rollback(); throw failure; }
+        finally { connection.setAutoCommit(auto); }
     }
 
     /** Capture the first migration input durably; retries never use a later GUI visitor. */

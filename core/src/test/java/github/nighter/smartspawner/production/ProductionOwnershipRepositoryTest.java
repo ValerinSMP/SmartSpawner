@@ -105,4 +105,33 @@ class ProductionOwnershipRepositoryTest {
         }
     }
 
+    @Test void farmLinksAndPlacerSurviveRestartWithoutLootOrOwnerRewrite(@TempDir Path directory) throws Exception {
+        String url="jdbc:sqlite:"+directory.resolve("links.db");
+        var repository=new ProductionOwnershipRepository("stock");
+        UUID other=new UUID(0,9);
+        try(var connection=DriverManager.getConnection(url)) {
+            source(connection); repository.initialize(connection);
+            repository.assign(connection,"legacy",ProductionFarmGroups.placedOwner(OWNER),"NEW_PLACER_PENDING_FARM",OWNER);
+            var links=java.util.List.of(new ProductionFarmGroups.Link(FARM,other));
+            repository.linkFarms(connection,links); repository.linkFarms(connection,links);
+        }
+        try(var connection=DriverManager.getConnection(url)) {
+            assertEquals(1,repository.farmLinks(connection).size());
+            var groups=new ProductionFarmGroups(repository.farmLinks(connection));
+            assertEquals(groups.canonical(FARM),groups.canonical(other));
+            assertEquals(OWNER,repository.owners(connection).get("legacy").owner());
+            assertNull(repository.owners(connection).get("legacy").farm());
+            assertEquals(150,repository.stock(connection,repository.owners(connection)).get("legacy").quantity());
+        }
+    }
+    @Test void interruptedFarmUnionRollsBackEveryLink() throws Exception {
+        try(var connection=DriverManager.getConnection("jdbc:sqlite::memory:")) {
+            source(connection); var repository=new ProductionOwnershipRepository("stock"); repository.initialize(connection);
+            connection.createStatement().execute("CREATE TRIGGER fail_link BEFORE INSERT ON stock_production_farm_links_v1 WHEN NEW.right_uuid='00000000-0000-0000-0000-000000000009' BEGIN SELECT RAISE(ABORT,'failure'); END");
+            assertThrows(SQLException.class,()->repository.linkFarms(connection,java.util.List.of(
+                new ProductionFarmGroups.Link(OWNER,FARM),new ProductionFarmGroups.Link(OWNER,new UUID(0,9)))));
+            assertTrue(repository.farmLinks(connection).isEmpty()); assertTrue(connection.getAutoCommit());
+        }
+    }
+
 }

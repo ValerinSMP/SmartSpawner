@@ -211,7 +211,8 @@ public class SpawnerStackHandler {
         }
         var currentOwner = plugin.getProductionCapacityService().ownership(targetSpawner.getSpawnerId());
         var incomingOwner = plugin.getProductionOwnershipItem().read(itemInHand);
-        if (!github.nighter.smartspawner.production.LegacyProductionMigration.compatibleForStack(currentOwner, incomingOwner)) {
+        if (!github.nighter.smartspawner.production.ProductionFarmGroups.canAddToStack(player.getUniqueId(), currentOwner)
+                || !plugin.getProductionCapacityService().compatibleForStack(currentOwner, incomingOwner)) {
             messageService.sendMessage(player, "production_mixed_ownership");
             return false;
         }

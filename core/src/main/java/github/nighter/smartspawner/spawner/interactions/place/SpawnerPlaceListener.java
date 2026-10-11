@@ -302,7 +302,7 @@ public class SpawnerPlaceListener implements Listener {
         // Track player interaction for last interaction field
         spawner.updateLastInteractedPlayer(player.getName());
         spawnerManager.addSpawner(spawnerId, spawner);
-        plugin.getProductionCapacityService().placed(spawner, ownership);
+        plugin.getProductionCapacityService().placed(spawner, ownership, player.getUniqueId());
         spawnerManager.queueSpawnerForSaving(spawnerId);
 
         if (Config.get().isSpawnerActivateParticlesEnabled()) {
@@ -335,7 +335,7 @@ public class SpawnerPlaceListener implements Listener {
         spawner.updateLastInteractedPlayer(player.getName());
 
         spawnerManager.addSpawner(spawnerId, spawner);
-        plugin.getProductionCapacityService().placed(spawner, ownership);
+        plugin.getProductionCapacityService().placed(spawner, ownership, player.getUniqueId());
         spawnerManager.queueSpawnerForSaving(spawnerId);
 
         if (Config.get().isSpawnerActivateParticlesEnabled()) {

@@ -6,7 +6,11 @@ import java.nio.charset.StandardCharsets;
 /** Explicit owner-approved retrospective rule. Assignment is not evidence of purchase. */
 public final class LegacyProductionMigration {
     public record Row(String id, String world, int x, int y, int z, String lastPlayer) {}
-    public record Claim(String farmKey, UUID owner, boolean ambiguous) {
+    public record Claim(String farmKey, UUID owner, boolean ambiguous, Set<String> farmKeys) {
+        public Claim { farmKeys = Set.copyOf(farmKeys); }
+        public Claim(String farmKey, UUID owner, boolean ambiguous) {
+            this(farmKey, owner, ambiguous, farmKey == null ? Set.of() : Set.of(farmKey));
+        }
         public static Claim none() { return new Claim(null, null, false); }
     }
     public record Decision(ProductionOwnershipRepository.Ownership ownership, String kind) {}

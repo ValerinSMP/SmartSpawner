@@ -34,6 +34,7 @@ public final class ProductionCapacityService implements AutoCloseable {
     private final AtomicLong allocationRevision = new AtomicLong();
     private final AtomicBoolean queued = new AtomicBoolean();
     private volatile Map<String, ProductionOwnershipRepository.Ownership> owners = Map.of();
+    private volatile ProductionFarmGroups farmGroups = new ProductionFarmGroups(List.of());
     private Map<String, ProductionCapacityPlanner.Stock> persisted = Map.of();
     private volatile Map<String, ProductionCapacityPlanner.Grant> grants = Map.of();
     private volatile Map<ProductionCapacityPlanner.Context, Integer> resolvedQuotas = Map.of();
@@ -82,11 +83,13 @@ public final class ProductionCapacityService implements AutoCloseable {
         try (Connection connection = connections.open()) {
             repository.initialize(connection);
             owners = repository.owners(connection);
+            farmGroups = new ProductionFarmGroups(repository.farmLinks(connection));
             persisted = repository.stock(connection, owners);
             repository.heights(connection).forEach(heights::putIfAbsent);
             if (legacyMigration && !plugin.getDatabaseManager().isCrossServer()) {
                 migrateLegacy(connection);
                 owners = repository.owners(connection);
+            farmGroups = new ProductionFarmGroups(repository.farmLinks(connection));
             }
             ownershipLoaded = true;
             plan();
@@ -99,19 +102,20 @@ public final class ProductionCapacityService implements AutoCloseable {
 
     private void migrateLegacy(Connection connection) throws Exception {
         var rows = repository.legacyRows(connection).stream().filter(row -> {
-            var prior = owners.get(row.id());
-            return !removed.contains(row.id()) && !pendingAssignments.contains(row.id())
-                    && (prior == null || prior.owner() == null || prior.farm() == null);
+            return !removed.contains(row.id()) && !pendingAssignments.contains(row.id());
         }).toList();
         if (rows.isEmpty()) { legacyUnresolved = 0; return; }
-        ready = false;
-        state = "MIGRATING_LEGACY";
+        // Keep existing allocations usable while bounded metadata batches inspect protection overlaps.
         var claims = protectionSnapshot.snapshot(rows).get(120, TimeUnit.SECONDS);
         Map<String, UUID> names = new HashMap<>();
         int assigned = 0, unresolved = 0;
         for (var row : rows) {
             if (closed) return;
             if (removed.contains(row.id()) || pendingAssignments.contains(row.id())) continue;
+            var claim = claims.getOrDefault(row.id(), LegacyProductionMigration.Claim.none());
+            var prior = owners.get(row.id());
+            reconcileFarm(connection, claim, prior);
+            if (prior != null && prior.owner() != null && prior.farm() != null) continue;
             String name = row.lastPlayer() == null ? "" : row.lastPlayer().toLowerCase(Locale.ROOT);
             if (!names.containsKey(name)) names.put(name, permissions == null ? null : permissions.resolveName(name));
             var decision = LegacyProductionMigration.decide(repositoryAuthority(), row, names.get(name),
@@ -119,10 +123,33 @@ public final class ProductionCapacityService implements AutoCloseable {
             if (decision == null) { unresolved++; continue; }
             if (repository.assignMigrated(connection, row.id(), decision)) assigned++;
         }
+        farmGroups = new ProductionFarmGroups(repository.farmLinks(connection));
         legacyAssigned += assigned;
         if (assigned > 0 || legacyUnresolved != unresolved) logger.info("Production migration: assigned "
                 + assigned + " blocks; unresolved " + unresolved + ". Retrospective assignment, unverified provenance.");
         legacyUnresolved = unresolved;
+    }
+
+    private void reconcileFarm(Connection connection, LegacyProductionMigration.Claim claim,
+            ProductionOwnershipRepository.Ownership prior) throws Exception {
+        if (claim.farmKeys().isEmpty()) return;
+        UUID first = ProductionFarmGroups.physical(repositoryAuthority(), claim.farmKey());
+        List<ProductionFarmGroups.Link> links = new ArrayList<>();
+        for (String key : claim.farmKeys()) links.add(new ProductionFarmGroups.Link(first,
+                ProductionFarmGroups.physical(repositoryAuthority(),key)));
+        if (prior != null && prior.farm() != null) links.add(new ProductionFarmGroups.Link(first,prior.farm()));
+        links.removeIf(link -> farmGroups.canonical(link.left()).equals(farmGroups.canonical(link.right())));
+        if (!links.isEmpty()) {
+            repository.linkFarms(connection,links);
+            farmGroups = new ProductionFarmGroups(repository.farmLinks(connection));
+        }
+    }
+
+    public boolean compatibleForStack(ProductionOwnershipRepository.Ownership target,
+            ProductionOwnershipRepository.Ownership incoming) {
+        return LegacyProductionMigration.compatibleForStack(
+                new ProductionOwnershipRepository.Ownership(target.owner(),farmGroups.canonical(target.farm())),
+                new ProductionOwnershipRepository.Ownership(incoming.owner(),farmGroups.canonical(incoming.farm())));
     }
 
     private String repositoryAuthority() { return plugin.getDatabaseManager().getTableSpawners(); }
@@ -148,7 +175,7 @@ public final class ProductionCapacityService implements AutoCloseable {
         stock.replaceAll((id, value) -> {
             var ownership = owners.get(id);
             return new ProductionCapacityPlanner.Stock(id, value.world(), value.x(), value.z(), value.type(),
-                    ownership == null ? null : ownership.owner(), ownership == null ? null : ownership.farm(), value.quantity());
+                    ownership == null ? null : ownership.owner(), ownership == null ? null : farmGroups.canonical(ownership.farm()), value.quantity());
         });
         Set<UUID> neededOwners = new HashSet<>();
         stock.values().forEach(value -> {
@@ -219,43 +246,35 @@ public final class ProductionCapacityService implements AutoCloseable {
         return owners.getOrDefault(id, new ProductionOwnershipRepository.Ownership(null, null));
     }
 
-    /** Called after a placement on the block region; unmarked legacy remains unresolved. */
-    public void placed(SpawnerData spawner, ProductionOwnershipRepository.Ownership declaration) {
+    /** Fresh placement uses the online placer's UUID, even when the item carries an old owner. */
+    public void placed(SpawnerData spawner, ProductionOwnershipRepository.Ownership declaration, UUID placer) {
         touch(spawner);
-        if (!legacyMigration) {
-            if (declaration.owner() != null) assign(spawner.getSpawnerId(), declaration, "RETAINED_DECLARATION");
-            return;
-        }
         String id = spawner.getSpawnerId();
         var location = spawner.getSpawnerLocation();
         var row = new LegacyProductionMigration.Row(id, location.getWorld().getName(), location.getBlockX(),
                 location.getBlockY(), location.getBlockZ(), spawner.getLastInteractedPlayer());
         pendingAssignments.add(id);
         changes.incrementAndGet();
-        protectionSnapshot.snapshot(List.of(row)).whenComplete((claims, failure) -> {
-            if (closed) return;
-            worker.execute(() -> {
-                if (closed || removed.contains(id)) return;
-                try {
-                    if (failure != null) throw new IllegalStateException("Protection snapshot unavailable", failure);
-                    var prior = owners.get(id);
-                    if (prior != null && prior.owner() != null && prior.farm() != null) return; // Manual confirmation wins.
-                    // Physical farm is rebound at the new location; carried farm IDs cannot multiply one protection's budget.
-                    if (prior == null) prior = new ProductionOwnershipRepository.Ownership(declaration.owner(), null);
-                    UUID last = prior.owner() != null ? null : permissions == null ? null : permissions.resolveName(row.lastPlayer());
-                    var decision = LegacyProductionMigration.decide(repositoryAuthority(), row, last, claims.get(id), prior);
-                    if (decision == null) {
-                        pendingAssignments.remove(id);
-                        requestPlan();
-                        return;
+        // Persist the known owner before protection lookup: an API failure must not lose the placer.
+        assign(id, ProductionFarmGroups.placedOwner(placer), "NEW_PLACER_PENDING_FARM", placer).whenComplete((ignored, ownerFailure) -> {
+            if (closed || ownerFailure != null) return;
+            protectionSnapshot.snapshot(List.of(row)).whenComplete((claims, failure) -> {
+                if (closed) return;
+                worker.execute(() -> {
+                    if (closed || removed.contains(id)) return;
+                    try (Connection connection = connections.open()) {
+                        if (failure != null) throw new IllegalStateException("Protection snapshot unavailable",failure);
+                        var prior = owners.get(id);
+                        if (prior == null || prior.farm() != null) return; // A later confirmed transfer wins.
+                        var claim = claims.get(id);
+                        reconcileFarm(connection,claim,prior);
+                        var decision = LegacyProductionMigration.decide(repositoryAuthority(),row,null,claim,prior);
+                        if (decision != null) assign(id,decision.ownership(),"NEW_PLACER_DECLARATION",placer);
+                    } catch (Exception unavailable) {
+                        // Owner-only is durable. Periodic migration retries the physical budget, without holding other farms.
+                        logger.warning("Placement farm unavailable; owner retained for automatic retry.");
                     }
-                    assign(id, decision.ownership(), declaration.owner() != null
-                            ? "RETAINED_OWNER_AUTO_FARM" : "NEW_PLACER_DECLARATION");
-                } catch (Exception unavailable) {
-                    ready = false;
-                    state = "ASSIGNMENT_UNCONFIRMED";
-                    logger.warning("Automatic placement assignment unavailable; stock retained for retry.");
-                }
+                });
             });
         });
     }
@@ -308,7 +327,7 @@ public final class ProductionCapacityService implements AutoCloseable {
         if (grant == null || grant.stock().x() != location.getBlockX() || grant.stock().z() != location.getBlockZ()
                 || !grant.stock().world().equals(location.getWorld().getName()) || !grant.stock().type().equals(type(spawner))
                 || !Objects.equals(grant.stock().owner(), ownership.owner())
-                || !Objects.equals(grant.stock().farm(), ownership.farm())) return 0;
+                || !Objects.equals(grant.stock().farm(), farmGroups.canonical(ownership.farm()))) return 0;
         return Math.min(spawner.getStackSize(), grant.productive());
     }
 
@@ -351,7 +370,7 @@ public final class ProductionCapacityService implements AutoCloseable {
                 if(owner==null || !viewer.equals(owner.owner())) continue;
                 var grant=allocation.get(value.id());
                 int productive=!enforcing?value.quantity():!valid || pendingAssignments.contains(value.id()) || grant==null
-                        || !Objects.equals(owner.owner(),grant.stock().owner()) || !Objects.equals(owner.farm(),grant.stock().farm())
+                        || !Objects.equals(owner.owner(),grant.stock().owner()) || !Objects.equals(farmGroups.canonical(owner.farm()),grant.stock().farm())
                         || !value.type().equals(grant.stock().type()) ? 0 : Math.min(value.quantity(),grant.productive());
                 entries.add(new OwnSpawnerListing.Entry(value.id(),owner.owner(),value.world(),value.x(),
                         heights.getOrDefault(value.id(),0),value.z(),value.type(),value.quantity(),productive));

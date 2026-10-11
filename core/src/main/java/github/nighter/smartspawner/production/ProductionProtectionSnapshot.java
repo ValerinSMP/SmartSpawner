@@ -101,12 +101,7 @@ public final class ProductionProtectionSnapshot implements AutoCloseable {
     }
 
     static LegacyProductionMigration.Claim reduce(Map<String, Set<UUID>> roots) {
-        if (roots.isEmpty()) return LegacyProductionMigration.Claim.none();
-        if (roots.size() != 1) return new LegacyProductionMigration.Claim(null, null, true);
-        var entry = roots.entrySet().iterator().next();
-        return new LegacyProductionMigration.Claim(entry.getKey(),
-                entry.getValue().size() == 1 ? entry.getValue().iterator().next() : null,
-                entry.getValue().size() > 1);
+        return ProductionFarmGroups.claim(roots);
     }
 
     @Override public void close() {
