@@ -7,6 +7,7 @@ import github.nighter.smartspawner.production.OwnSpawnerListing;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.*;
@@ -20,6 +21,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 
 /** Player-only read-only listing. Never opens administrative actions or loads chunks. */
 public final class MineSubCommand extends BaseSubCommand implements Listener {
+    private static final String OTHERS_PERMISSION="smartspawner.command.mine.others";
     private final Map<UUID,Object> requests=new java.util.concurrent.ConcurrentHashMap<>();
     public MineSubCommand(SmartSpawner plugin) {
         super(plugin);
@@ -30,7 +32,12 @@ public final class MineSubCommand extends BaseSubCommand implements Listener {
     @Override public String getDescription() { return "Consulta tus spawners, filtros y producción"; }
     @Override public LiteralArgumentBuilder<CommandSourceStack> build() {
         return super.build().then(Commands.argument("page",IntegerArgumentType.integer(1,1000000))
-                .executes(context -> { logCommandExecution(context); return executePage(context,IntegerArgumentType.getInteger(context,"page")); }));
+                .executes(context -> { logCommandExecution(context); return executePage(context,IntegerArgumentType.getInteger(context,"page")); }))
+                .then(Commands.argument("player",StringArgumentType.word())
+                        .requires(source -> source.getSender().hasPermission(OTHERS_PERMISSION))
+                        .executes(context -> executeTarget(context,1))
+                        .then(Commands.argument("page",IntegerArgumentType.integer(1,1000000))
+                                .executes(context -> executeTarget(context,IntegerArgumentType.getInteger(context,"page")))));
     }
     @Override public int execute(CommandContext<CommandSourceStack> context) { return executePage(context,1); }
     private int executePage(CommandContext<CommandSourceStack> context,int page) {
@@ -38,44 +45,71 @@ public final class MineSubCommand extends BaseSubCommand implements Listener {
             plugin.getMessageService().sendMessage(context.getSource().getSender(),"player_only");
             return 0;
         }
-        request(player,page,OwnSpawnerListing.Filter.ALL,null,OwnSpawnerListing.Sort.TYPE);
+        request(player,player.getUniqueId(),player.getName(),page,OwnSpawnerListing.Filter.ALL,null,OwnSpawnerListing.Sort.TYPE);
         return 1;
     }
-    private void request(Player player,int page,OwnSpawnerListing.Filter filter,String type,OwnSpawnerListing.Sort sort) {
+    private int executeTarget(CommandContext<CommandSourceStack> context,int page) {
+        logCommandExecution(context);
+        if(!(context.getSource().getSender() instanceof Player player)) {
+            plugin.getMessageService().sendMessage(context.getSource().getSender(),"player_only"); return 0;
+        }
+        if(!player.hasPermission(getPermission()) || !player.hasPermission(OTHERS_PERMISSION)) {
+            plugin.getMessageService().sendMessage(player,"no_permission"); return 0;
+        }
+        String name=StringArgumentType.getString(context,"player");
+        Object token=new Object();requests.put(player.getUniqueId(),token);
+        Inventory expected=player.getOpenInventory().getTopInventory();
+        plugin.getProductionCapacityService().resolveListingOwner(name).whenComplete((target,failure) ->
+                Scheduler.runEntityTask(player,() -> {
+                    if(!requests.remove(player.getUniqueId(),token) || !player.isOnline()
+                            || player.getOpenInventory().getTopInventory()!=expected
+                            || !player.hasPermission(getPermission()) || !player.hasPermission(OTHERS_PERMISSION)) return;
+                    if(failure!=null) { plugin.getMessageService().sendMessage(player,"mine.pending"); return; }
+                    if(target==null) { plugin.getMessageService().sendMessage(player,"mine.unknown_player",Map.of("player",name)); return; }
+                    request(player,target,name,page,OwnSpawnerListing.Filter.ALL,null,OwnSpawnerListing.Sort.TYPE);
+                }));
+        return 1;
+    }
+    private boolean allowed(Player player,UUID target) {
+        return OwnSpawnerListing.canInspect(player.getUniqueId(),target,player.hasPermission(getPermission()),
+                player.hasPermission(OTHERS_PERMISSION));
+    }
+    private void request(Player player,UUID target,String targetName,int page,OwnSpawnerListing.Filter filter,String type,OwnSpawnerListing.Sort sort) {
         UUID viewer=player.getUniqueId();
-        if (!player.hasPermission(getPermission())) return;
+        if (!allowed(player,target)) return;
         Object token=new Object(); requests.put(viewer,token);
         Inventory expected=player.getOpenInventory().getTopInventory();
-        plugin.getProductionCapacityService().ownListing(viewer,page,filter,type,sort).whenComplete((result,failure) ->
+        plugin.getProductionCapacityService().ownListing(target,page,filter,type,sort).whenComplete((result,failure) ->
                 Scheduler.runEntityTask(player,() -> {
                     if (!requests.remove(viewer,token) || player.getOpenInventory().getTopInventory()!=expected) return;
-                    if (!player.isOnline() || !viewer.equals(player.getUniqueId()) || !player.hasPermission(getPermission())) return;
+                    if (!player.isOnline() || !viewer.equals(player.getUniqueId()) || !allowed(player,target)) return;
                     if (failure!=null) { plugin.getMessageService().sendMessage(player,"mine.pending"); return; }
-                    open(player,result,filter,type,sort);
+                    open(player,target,targetName,result,filter,type,sort);
                 }));
     }
-    private void open(Player player,OwnSpawnerListing.Page page,OwnSpawnerListing.Filter filter,String type,OwnSpawnerListing.Sort sort) {
-        var holder=new Holder(player.getUniqueId(),page.number(),page.pages(),filter,type,sort,page.types());
+    private void open(Player player,UUID target,String targetName,OwnSpawnerListing.Page page,OwnSpawnerListing.Filter filter,String type,OwnSpawnerListing.Sort sort) {
+        var holder=new Holder(player.getUniqueId(),target,targetName,page.number(),page.pages(),filter,type,sort,page.types());
         Map<String,String> summary=Map.of("page",number(page.number()),"pages",number(page.pages()),"blocks",number(page.blocks()),
-                "stock",number(page.stock()),"productive",number(page.productive()));
-        Inventory inventory=Bukkit.createInventory(holder,54,plugin.getLanguageManager().commandGui().title("mine_title",summary));
+                "stock",number(page.stock()),"productive",number(page.productive()),"target",targetName);
+        Inventory inventory=Bukkit.createInventory(holder,54,plugin.getLanguageManager().commandGui().title(player.getUniqueId().equals(target)?"mine_title":"mine_admin_title",summary));
         holder.inventory=inventory;
         for(int i=0;i<page.entries().size();i++) {
             var row=page.entries().get(i);
             Map<String,String> values=Map.of("type",typeName(row.type()),"world",row.world(),"x",Integer.toString(row.x()),
                     "y",Integer.toString(row.y()),"z",Integer.toString(row.z()),"stock",number(row.stock()),
-                    "productive",number(row.productive()),"held",number(row.stock()-row.productive()));
-            inventory.setItem(i,item(Material.SPAWNER,"mine_item",values));
+                    "productive",number(row.productive()),"held",number(row.stock()-row.productive()),"target",targetName);
+            inventory.setItem(i,item(Material.SPAWNER,player.getUniqueId().equals(target)?"mine_item":"mine_admin_item",values));
         }
         if(page.number()>1) inventory.setItem(45,item(Material.ARROW,"mine_previous",summary));
         inventory.setItem(46,item(Material.SPAWNER,"mine_type",Map.of("type",type==null?label("all"):typeName(type))));
         inventory.setItem(48,item(Material.HOPPER,"mine_filter",Map.of("filter",label("filter_"+filter.name().toLowerCase(Locale.ROOT)))));
         inventory.setItem(49,item(Material.BARRIER,"mine_close",summary));
         inventory.setItem(50,item(Material.COMPARATOR,"mine_sort",Map.of("sort",label("sort_"+sort.name().toLowerCase(Locale.ROOT)))));
-        inventory.setItem(51,item(Material.PAPER,"mine_summary",summary));
+        inventory.setItem(51,item(Material.PAPER,player.getUniqueId().equals(target)?"mine_summary":"mine_admin_summary",summary));
         if(page.number()<page.pages()) inventory.setItem(53,item(Material.ARROW,"mine_next",summary));
         player.openInventory(inventory);
-        if(page.blocks()==0) plugin.getMessageService().sendMessage(player,page.types().isEmpty()?"mine.empty":"mine.no_results");
+        if(page.blocks()==0) plugin.getMessageService().sendMessage(player,page.types().isEmpty()
+                ?player.getUniqueId().equals(target)?"mine.empty":"mine.admin_empty":"mine.no_results",Map.of("player",targetName));
         else player.playSound(player.getLocation(),Sound.UI_BUTTON_CLICK,1.0f,1.0f);
     }
     private String number(long value) { return plugin.getLanguageManager().formatNumber(value); }
@@ -103,17 +137,17 @@ public final class MineSubCommand extends BaseSubCommand implements Listener {
         if (!(event.getView().getTopInventory().getHolder(false) instanceof Holder holder)) return;
         event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player) || !holder.viewer.equals(player.getUniqueId())
-                || !player.hasPermission(getPermission())) return;
+                || !allowed(player,holder.target)) return;
         int slot=event.getRawSlot();
         if(slot==49) { requests.remove(player.getUniqueId()); player.closeInventory(); player.playSound(player.getLocation(),Sound.UI_BUTTON_CLICK,1.0f,1.0f); }
-        else if(slot==45 && holder.page>1) request(player,holder.page-1,holder.filter,holder.type,holder.sort);
-        else if(slot==53 && holder.page<holder.pages) request(player,holder.page+1,holder.filter,holder.type,holder.sort);
-        else if(slot==48) request(player,1,holder.filter.next(),holder.type,holder.sort);
-        else if(slot==50) request(player,1,holder.filter,holder.type,holder.sort.next());
+        else if(slot==45 && holder.page>1) request(player,holder.target,holder.targetName,holder.page-1,holder.filter,holder.type,holder.sort);
+        else if(slot==53 && holder.page<holder.pages) request(player,holder.target,holder.targetName,holder.page+1,holder.filter,holder.type,holder.sort);
+        else if(slot==48) request(player,holder.target,holder.targetName,1,holder.filter.next(),holder.type,holder.sort);
+        else if(slot==50) request(player,holder.target,holder.targetName,1,holder.filter,holder.type,holder.sort.next());
         else if(slot==46) {
             int index=holder.type==null?-1:holder.types.indexOf(holder.type);
             String next=index+1<holder.types.size()?holder.types.get(index+1):null;
-            request(player,1,holder.filter,next,holder.sort);
+            request(player,holder.target,holder.targetName,1,holder.filter,next,holder.sort);
         }
     }
     @EventHandler public void close(InventoryCloseEvent event) {
@@ -124,10 +158,10 @@ public final class MineSubCommand extends BaseSubCommand implements Listener {
         if(event.getView().getTopInventory().getHolder(false) instanceof Holder) event.setCancelled(true);
     }
     private static final class Holder implements InventoryHolder {
-        final UUID viewer; final int page,pages; final OwnSpawnerListing.Filter filter;
+        final UUID viewer,target; final String targetName; final int page,pages; final OwnSpawnerListing.Filter filter;
         final String type; final OwnSpawnerListing.Sort sort; final List<String> types; Inventory inventory;
-        Holder(UUID viewer,int page,int pages,OwnSpawnerListing.Filter filter,String type,OwnSpawnerListing.Sort sort,List<String> types) {
-            this.viewer=viewer;this.page=page;this.pages=pages;this.filter=filter;this.type=type;this.sort=sort;this.types=types;
+        Holder(UUID viewer,UUID target,String targetName,int page,int pages,OwnSpawnerListing.Filter filter,String type,OwnSpawnerListing.Sort sort,List<String> types) {
+            this.viewer=viewer;this.target=target;this.targetName=targetName;this.page=page;this.pages=pages;this.filter=filter;this.type=type;this.sort=sort;this.types=types;
         }
         @Override public Inventory getInventory() { return inventory; }
     }

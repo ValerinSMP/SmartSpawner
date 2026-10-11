@@ -366,3 +366,32 @@ mine_labels:
   sort_type: Tipo de criatura
   sort_stock: Más colocados primero
   sort_producing: Más produciendo primero
+
+mine_admin_title: '{target} · {stock} colocados · {productive} produciendo'
+
+mine_admin_item:
+  name: '&f{type} &#5DB5F1· {stock} colocados'
+  lore:
+  - ''
+  - ' &#5DB5F1ℹ Tus spawners:'
+  - '  &8• &fProduciendo: &#37eb9a{productive}'
+  - '  &8• &fSin producir: &#F0C857{held}'
+  - '  &8• &fResponsable: &#37eb9a{target}'
+  - '  &8• &fMundo: &e{world}'
+  - '  &8• &fUbicación: &7{x}, {y}, {z}'
+  - ''
+  - '&7Las unidades sin producir se conservan.'
+
+mine_admin_summary:
+  name: '&#5DB5F1{stock} colocados &8· &#37eb9a{productive} produciendo'
+  lore:
+  - '&fResponsable: &#5DB5F1{target}'
+  - ''
+  - ' &#5DB5F1ℹ Resumen del filtro:'
+  - '  &8• &fBloques: &e{blocks}'
+  - '  &8• &fPágina: &e{page}/{pages}'
+  - ''
+  - '&7Produciendo indica el cupo habilitado.'
+  - '&7Para generar loot necesitan un jugador cerca'
+  - '&7y no estar pausados.'
+  - '&7El cupo se comparte por tipo de criatura.'

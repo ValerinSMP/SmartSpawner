@@ -8,6 +8,9 @@ public final class OwnSpawnerListing {
     public record Page(List<Entry> entries, int number, int pages, int blocks, long stock, long productive,
                        List<String> types) {}
     private OwnSpawnerListing() {}
+    public static boolean canInspect(UUID viewer,UUID target,boolean ownPermission,boolean othersPermission) {
+        return viewer!=null && target!=null && ownPermission && (viewer.equals(target) || othersPermission);
+    }
     public static Page page(UUID viewer, Collection<Entry> entries, int requested) {
         return page(viewer,entries,requested,Filter.ALL,null,Sort.TYPE);
     }

@@ -271,3 +271,9 @@ mine:
   no_results:
     message: '&#F0C857No hay spawners que coincidan con estos filtros. Cámbialos para ver el resto.'
     sound: block.note_block.pling
+  unknown_player:
+    message: '&#F0C857No encontramos a &f{player}&#F0C857. Revisa el nombre o usa su UUID.'
+    sound: block.note_block.pling
+  admin_empty:
+    message: '&#F0C857{player} no tiene spawners colocados asignados en este servidor.'
+    sound: block.note_block.pling

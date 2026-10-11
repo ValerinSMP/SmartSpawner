@@ -43,4 +43,23 @@ class OwnSpawnerListingTest {
         assertEquals(1,empty.number());assertEquals(0,empty.stock());assertTrue(empty.entries().isEmpty());
     }
 
+    @Test void inspectingOtherPlayersRequiresSeparatePermissionEveryTime() {
+        UUID other=new UUID(0,8);
+        assertTrue(OwnSpawnerListing.canInspect(viewer,viewer,true,false));
+        assertFalse(OwnSpawnerListing.canInspect(viewer,other,true,false));
+        assertTrue(OwnSpawnerListing.canInspect(viewer,other,true,true));
+        assertFalse(OwnSpawnerListing.canInspect(viewer,other,false,true));
+        assertFalse(OwnSpawnerListing.canInspect(viewer,null,true,true));
+        // Revoking the admin permission also denies an already open foreign menu.
+        assertFalse(OwnSpawnerListing.canInspect(viewer,other,true,false));
+    }
+    @Test void administratorUsesTheRequestedOwnerAsListingScope() {
+        UUID other=new UUID(0,8);
+        var rows=List.of(entry("self",viewer),entry("target",other));
+        var page=OwnSpawnerListing.page(other,rows,1);
+        assertEquals(1,page.blocks());assertEquals("target",page.entries().getFirst().id());
+        assertEquals(other,page.entries().getFirst().responsible());
+        assertEquals(70,page.stock());assertEquals(50,page.productive());
+    }
+
 }

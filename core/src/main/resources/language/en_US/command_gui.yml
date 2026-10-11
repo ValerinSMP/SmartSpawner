@@ -349,3 +349,24 @@ mine_labels:
   sort_type: Type
   sort_stock: Most placed first
   sort_producing: Most producing first
+
+mine_admin_title: '{target} · {stock} placed · {productive} producing'
+
+mine_admin_item:
+  name: '&f{type} &#5DB5F1· {stock} placed'
+  lore:
+  - '&7Producing: &a{productive}'
+  - '&7Not producing: &e{held}'
+  - '&7Owner: {target}'
+  - '&7World: {world}'
+  - '&7Location: {x}, {y}, {z}'
+
+mine_admin_summary:
+  name: '&b{stock} placed · &a{productive} producing'
+  lore:
+  - '&fOwner: &b{target}'
+  - '&7Filtered blocks: {blocks}'
+  - '&7Page {page}/{pages}'
+  - '&7Producing means assigned capacity.'
+  - '&7Needs nearby players and must not be paused.'
+  - '&7Farm capacity is shared per type.'

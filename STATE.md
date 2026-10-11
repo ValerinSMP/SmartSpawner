@@ -1,12 +1,19 @@
-# SmartSpawner — D9 objetos sin dueño instalado, activación pendiente
+# SmartSpawner — D10 mine admin instalado, activación pendiente
 2026-10-11. Fuente canónica personal: /root/development/projects/forks/upstream/SmartSpawner.
-Rama work/valerin-production-contract-v1; versión 1.8.3-valerin-production.7.
-Custom observado detenido exit0 desde23:11:46Z; .7 instalado en disco para próximo arranque del propietario. Sin lifecycle.
-SHA256 42428f42c97ee6dc4ba3e6a8203029f6b5687405f5345c874b25a2c859f99d9d.
+Rama work/valerin-production-contract-v1; versión 1.8.3-valerin-production.8.
+Custom .8 instalado en disco, activación pendiente próximo arranque/reinicio del propietario. Sin lifecycle.
+SHA256 1659b8035581940b06d4a1e5e809631d731fe599fe30dc66c09d9548a0289d53.
 Backup original .3 HDD smartspawner-custom-overlap-fix-20261011T212446Z.
 Backup final HDD smartspawner-custom-overlap-fix-20261011T212643Z (candidato intermedio .4).
 Ambos snapshots SQLite consistentes/integrity ok:3182 bloques/18878 unidades al respaldo;
 config intacta, ningún restore/SQL directo a stock. Los conteos son actuales, no snapshot inicial3354.
+
+D10: /ss mine <jugador|UUID> [página] admin/read-only, nombres registrados offline mediante
+LPworker. Permiso adicional smartspawner.command.mine.others/defaultop; sin cambiar rangos.
+Viewer/target separados, revalida permisos y conserva target/filtros/página.161tests/0fallos+build
+personal y locale keys validados. BackupHDD smartspawner-custom-mine-admin-20261011T232513Z (.7),
+SQLite consistente3098/17695/integrityok; config intacta; solo nuevas claves admin de idioma.
+Entrega/rollback vigente: docs/valerin/DELIVERY-D10-MINE-ADMIN-20261011.md. Gameplay pendiente.
 
 D9 regla vigente: objetos guardados/retirados sin propietario productivo; etiquetas viejas
 ignoradas, nuevos drops/give limpian solo owner/farm. Apilar a bloque propio no compara etiquetas
@@ -38,7 +45,7 @@ loot/XP, callbacks, huevo<=50/venta previa, Mending/Eco y fix Graal .3.
 152 pruebas unitarias y shadowJar aprobados en personal limitado. Simulación standalone
 GraalVM25.0.3:3354 filas históricas/seisrangos uniformes sin negativos; no prueba gameplay.
 Entrega/migración/rollback: docs/valerin/DELIVERY-D6-OVERLAP-PLACER-20261011.md.
-Pendiente después del reinicio diario: log .7, READY, /ss mine colocador, generación y
+Pendiente después del reinicio diario: log .8, READY, /ss mine colocador, generación y
 pruebas de granja compartida/stack/Mending/huevo. No reiniciar/recargar por inferencia.
 Test continúa .2; Sync no modificado. API reciclaje permanece DRAFT/sin proveedor runtime.
 

@@ -348,6 +348,18 @@ public final class ProductionCapacityService implements AutoCloseable {
         return owner == null ? null : resolvedQuotas.get(new ProductionCapacityPlanner.Context(owner,
                 spawner.getSpawnerLocation().getWorld().getName()));
     }
+    /** Admin name lookup stays on the worker; never creates an offline Bukkit player. */
+    public CompletableFuture<UUID> resolveListingOwner(String input) {
+        if(closed) return CompletableFuture.failedFuture(new IllegalStateException("Closed"));
+        return CompletableFuture.supplyAsync(() -> {
+            if(input==null || !input.matches("[A-Za-z0-9_.-]{1,64}")) return null;
+            try { return UUID.fromString(input); }
+            catch(IllegalArgumentException notUuid) {
+                try { return permissions==null?null:permissions.resolveName(input); }
+                catch(Exception unavailable) { throw new CompletionException(unavailable); }
+            }
+        },worker);
+    }
     public CompletableFuture<OwnSpawnerListing.Page> ownListing(UUID viewer,int page) {
         return ownListing(viewer,page,OwnSpawnerListing.Filter.ALL,null,OwnSpawnerListing.Sort.TYPE);
     }

@@ -72,6 +72,9 @@ permissions:
   smartspawner.production.capacity.100:
     description: Per-type production capacity 100
     default: false
+  smartspawner.command.mine.others:
+    description: Read another player assigned spawners without management actions
+    default: op
   smartspawner.command.mine:
     description: View only spawners assigned to your own productive capacity
     default: true

@@ -266,3 +266,7 @@ mine:
     message: '&eNo spawners assigned to you yet. Assignment may be pending.'
   no_results:
     message: '&eNo matching spawners. Change the filters to see the rest.'
+  unknown_player:
+    message: '&ePlayer {player} was not found. Check the name or use their UUID.'
+  admin_empty:
+    message: '&eNo placed spawners are assigned to {player} on this server.'
