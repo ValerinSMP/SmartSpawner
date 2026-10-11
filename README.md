@@ -64,7 +64,7 @@ D1 contains offline simulation and a draft interface; no recycling provider or p
 
 [Automatic migration and player /ss mine delivery](docs/valerin/DELIVERY-D4-AUTOMIGRATION-MINE-20261011.md).
 
-Current Valerin delivery: production.6 is staged on Custom for the owner's daily restart.
+Current Valerin delivery: production.7 is staged on Custom for the owner's daily restart.
 Fresh blocks belong to their placer; adding to someone else's stack is rejected. Overlapping
 protection roots share one durable farm budget. Existing confirmed owners remain unchanged.
 [Overlap/placer migration, validation and rollback](docs/valerin/DELIVERY-D6-OVERLAP-PLACER-20261011.md).
@@ -74,3 +74,7 @@ Production caps now apply independently to each mob/item type: 100 per farm/type
 
 /ss mine now shows placed/producing counts and private status/type filters, sorting and pagination.
 [Spanish menu, notices and rollback](docs/valerin/DELIVERY-D8-MINE-SPANISH-20261011.md).
+
+Held/retired spawner items have no production owner: old owner/farm tags are ignored and new drops
+remove them. Placed owners remain durable; held units can be added to your own stack.
+[Unplaced item ownership and stored-stack correction](docs/valerin/DELIVERY-D9-UNPLACED-NO-OWNER-20261011.md).

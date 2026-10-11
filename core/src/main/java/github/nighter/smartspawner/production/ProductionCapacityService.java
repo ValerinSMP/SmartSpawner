@@ -145,13 +145,6 @@ public final class ProductionCapacityService implements AutoCloseable {
         }
     }
 
-    public boolean compatibleForStack(ProductionOwnershipRepository.Ownership target,
-            ProductionOwnershipRepository.Ownership incoming) {
-        return LegacyProductionMigration.compatibleForStack(
-                new ProductionOwnershipRepository.Ownership(target.owner(),farmGroups.canonical(target.farm())),
-                new ProductionOwnershipRepository.Ownership(incoming.owner(),farmGroups.canonical(incoming.farm())));
-    }
-
     private String repositoryAuthority() { return plugin.getDatabaseManager().getTableSpawners(); }
 
     private void plan() {

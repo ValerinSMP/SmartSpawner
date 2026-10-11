@@ -210,9 +210,9 @@ public class SpawnerStackHandler {
             return false;
         }
         var currentOwner = plugin.getProductionCapacityService().ownership(targetSpawner.getSpawnerId());
-        var incomingOwner = plugin.getProductionOwnershipItem().read(itemInHand);
-        if (!github.nighter.smartspawner.production.ProductionFarmGroups.canAddToStack(player.getUniqueId(), currentOwner)
-                || !plugin.getProductionCapacityService().compatibleForStack(currentOwner, incomingOwner)) {
+        // Adding held units is a placement: consumed units adopt the target owner's physical farm.
+        // Stale item owner/farm tags must not block a player adding to their own stack.
+        if (!github.nighter.smartspawner.production.ProductionFarmGroups.canAddToStack(player.getUniqueId(), currentOwner)) {
             messageService.sendMessage(player, "production_mixed_ownership");
             return false;
         }

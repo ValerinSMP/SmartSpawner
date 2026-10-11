@@ -146,8 +146,8 @@ egg_change_sale_blocked:
   message: "Cannot change type: collect items without a sell price or enable selling."
 
 production_mixed_ownership:
-  message: '&#F0C857No puedes añadir unidades a un stack de otro responsable ni mezclar propietarios. &fColoca un
-    bloque propio o solicita una transferencia.'
+  message: '&#F0C857Este stack está asignado a otro responsable o aún no tiene responsable confirmado. &fColoca
+    un bloque propio o solicita una revisión.'
   sound: block.note_block.pling
 production_stock_status:
   message: '&f{stock} colocados &8· &#37eb9a{productive} produciendo &8· &#F0C857{held} sin producir. &7Tus spawners,

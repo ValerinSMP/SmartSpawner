@@ -150,7 +150,7 @@ egg_change_sale_blocked:
   message: "Cannot change type: collect items without a sell price or enable selling."
 
 production_mixed_ownership:
-  message: "Cannot mix owners in one block. Place separately or explicitly transfer ownership."
-
+  message: '&eThis stack belongs to another player or its owner is not confirmed. Place your own block or ask staff
+    to review it.'
 production_stock_status:
   message: "{stock} units retained: {productive} productive and {held} held. Spawners, loot and XP are preserved."

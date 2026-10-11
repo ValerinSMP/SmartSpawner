@@ -54,4 +54,20 @@ class ProductionFarmGroupsTest {
         var prior=new ProductionOwnershipRepository.Ownership(a,b);
         assertEquals(prior,LegacyProductionMigration.decide("stock",new LegacyProductionMigration.Row("x","w",0,0,0,"visitor"),c,claim,prior).ownership());
     }
+    @Test void storedItemsFromAnotherOwnerDoNotBlockPlacementIntoOwnStack() {
+        var target=new ProductionOwnershipRepository.Ownership(a,b);
+        var stored=new ProductionOwnershipRepository.Ownership(c,new UUID(0,8));
+        assertFalse(LegacyProductionMigration.compatibleForStack(target,stored));
+        assertTrue(ProductionFarmGroups.canAddToStack(a,target));
+        assertFalse(ProductionFarmGroups.canAddToStack(c,target));
+        assertEquals(a,target.owner()); assertEquals(b,target.farm());
+    }
+    @Test void ownStoredItemsFromDifferentFarmCanBeAddedWithoutImportingOldBudget() {
+        var target=new ProductionOwnershipRepository.Ownership(a,b);
+        var stored=new ProductionOwnershipRepository.Ownership(a,new UUID(0,8));
+        assertFalse(LegacyProductionMigration.compatibleForStack(target,stored));
+        assertTrue(ProductionFarmGroups.canAddToStack(a,target));
+        assertEquals(b,target.farm());
+    }
+
 }
