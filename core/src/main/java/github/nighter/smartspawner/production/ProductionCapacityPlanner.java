@@ -22,8 +22,8 @@ public final class ProductionCapacityPlanner {
         List<Stock> ordered = stock.stream().sorted(Comparator.comparing(Stock::id)).toList();
         Map<String, Grant> result = new LinkedHashMap<>();
         Map<OwnerType, Integer> used = new HashMap<>();
-        Map<UUID, Integer> farms = new HashMap<>();
-        Map<String, NavigableMap<Long, NavigableMap<Long, Integer>>> cells = new HashMap<>();
+        Map<FarmType, Integer> farms = new HashMap<>();
+        Map<WorldType, NavigableMap<Long, NavigableMap<Long, Integer>>> cells = new HashMap<>();
         long[][] prefix = new long[span * 2][span * 2];
         Map<OwnerType, Integer> strictQuotas = new HashMap<>();
         for (Stock entry : ordered) {
@@ -48,12 +48,12 @@ public final class ProductionCapacityPlanner {
             OwnerType key = new OwnerType(entry.owner(), entry.type());
             quota = strictQuotas.get(key);
             int allowed = Math.min(quantity, Math.min(Math.max(0, quota - used.getOrDefault(key, 0)),
-                    Math.max(0, farmCap - farms.getOrDefault(entry.farm(), 0))));
-            NavigableMap<Long, NavigableMap<Long, Integer>> worldCells = cells.computeIfAbsent(entry.world(), k -> new TreeMap<>());
+                    Math.max(0, farmCap - farms.getOrDefault(new FarmType(entry.farm(), entry.type()), 0))));
+            NavigableMap<Long, NavigableMap<Long, Integer>> worldCells = cells.computeIfAbsent(new WorldType(entry.world(), entry.type()), k -> new TreeMap<>());
             if (allowed > 0) allowed = Math.min(allowed, spatialFree(worldCells, entry.x(), entry.z(), span, spatialCap, prefix));
             if (allowed > 0) {
                 used.merge(key, allowed, Integer::sum);
-                farms.merge(entry.farm(), allowed, Integer::sum);
+                farms.merge(new FarmType(entry.farm(), entry.type()), allowed, Integer::sum);
                 worldCells.computeIfAbsent((long) entry.x(), k -> new TreeMap<>()).merge((long) entry.z(), allowed, Integer::sum);
             }
             result.put(entry.id(), new Grant(entry, allowed, allowed == quantity ? "PRODUCTIVE" : "STOCK_HELD"));
@@ -63,7 +63,7 @@ public final class ProductionCapacityPlanner {
 
     // A window containing the candidate starts at any integer X/Z in these span ranges.
     // A local 2D prefix sum tests ALL such windows, including borders/corners and neighbours.
-    // Long coordinates prevent int overflow. Height/type/activators are deliberately absent.
+    // Long coordinates prevent int overflow. Each index belongs to one world/type. Height and activators are deliberately absent.
     private static int spatialFree(NavigableMap<Long, NavigableMap<Long, Integer>> cells, int x, int z, int span, int cap, long[][] prefix) {
         int size = span * 2 - 1;
         long left = (long) x - span + 1, bottom = (long) z - span + 1;
@@ -94,5 +94,7 @@ public final class ProductionCapacityPlanner {
         return free;
     }
 
+    private record FarmType(UUID farm, String type) {}
+    private record WorldType(String world, String type) {}
     private record OwnerType(UUID owner, String type) {}
 }

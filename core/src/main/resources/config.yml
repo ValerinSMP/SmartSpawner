@@ -160,12 +160,13 @@ spawner_egg_change:
 # Stock accounting and optional productive capacity. Includes unloaded chunks.
 # Production settings require restart; legacy migration is explicitly opt-in.
 production:
-  # observation preserves production. enforce is approved for Test, not Custom.
+  # observation preserves production; enforce applies the configured production policy.
   mode: observation
   legacy-migration:
     # Approved retrospective rule: last registered player, then protection owner.
     # Captures the input once; no automatic owner changes on later interactions.
     enabled: false
+  # Productive units per farm AND type, shared across all owners/heights.
   farm-cap: 100
   # Effective inherited permission checks; no primary-group or OP lookup.
   # Explicit smartspawner.production.capacity.<tier> grants/denials override these.
@@ -176,7 +177,7 @@ production:
     '90': group.elite
     '100': group.leyenda
   spatial:
-    # Every horizontal window; all types/Y, inclusive 33 positions (distance <= 32).
+    # Every horizontal window PER TYPE, all Y/owners, inclusive 33 positions (distance <= 32).
     span: 33
     cap: 100
   observation:

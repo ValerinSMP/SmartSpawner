@@ -26,7 +26,7 @@ class ProductionFarmGroupsTest {
     @Test void overlapSharesBudgetOutsideIntersectionAcrossOwnersAndTypes() {
         var groups=new ProductionFarmGroups(List.of(new ProductionFarmGroups.Link(a,b)));
         var stock=List.of(new ProductionCapacityPlanner.Stock("a","w",0,0,"MOB:BLAZE",a,groups.canonical(a),80),
-                new ProductionCapacityPlanner.Stock("b","w",1000,0,"MOB:ZOMBIE",b,groups.canonical(b),80));
+                new ProductionCapacityPlanner.Stock("b","w",1000,0,"MOB:BLAZE",b,groups.canonical(b),80));
         var grants=ProductionCapacityPlanner.allocate(stock,Map.of(new ProductionCapacityPlanner.Context(a,"w"),100,
                 new ProductionCapacityPlanner.Context(b,"w"),100),100,33,100);
         assertEquals(100,grants.values().stream().mapToInt(ProductionCapacityPlanner.Grant::productive).sum());

@@ -1,23 +1,30 @@
-# SmartSpawner — D6 instalado, activación pendiente
+# SmartSpawner — D7 por tipo instalado, activación pendiente
 2026-10-11. Fuente canónica personal: /root/development/projects/forks/upstream/SmartSpawner.
-Rama work/valerin-production-contract-v1; versión 1.8.3-valerin-production.4.
-Custom activo .3; .4 instalado en disco para reinicio diario del propietario. Sin lifecycle.
-SHA256 6b314e871359197389793b8b893c19a17ad6413eca432e7b16887971448b79f7.
+Rama work/valerin-production-contract-v1; versión 1.8.3-valerin-production.5.
+Custom activo .3; .5 instalado en disco para reinicio diario del propietario. Sin lifecycle.
+SHA256 0c191d7eef15dd137f867834d061540644e25b307a17c46fce4cb128f110e91f.
 Backup original .3 HDD smartspawner-custom-overlap-fix-20261011T212446Z.
 Backup final HDD smartspawner-custom-overlap-fix-20261011T212643Z (candidato intermedio .4).
 Ambos snapshots SQLite consistentes/integrity ok:3182 bloques/18878 unidades al respaldo;
 config intacta, ningún restore/SQL directo a stock. Los conteos son actuales, no snapshot inicial3354.
 
-D6: colocador UUID durable antes de protección; nuevo bloque cambia responsable del objeto
+D7 decisión vigente: granja100/tipo y ventana33x33 cap100/tipo, entre jugadores y todas
+las alturas. Corrige suma entre tipos de D3–D6. Stack50 continúa activo tras reload previo.
+155tests/0fallos y shadowJar personal. Graal standalone3354filas/seisrangos sin negativos;
+no gameplay. Backup HDD smartspawner-custom-per-type-20261011T215717Z (.4 previa), snapshot
+3194bloques/19305unidades/integrityok,config intacta. Sin lifecycle en D7.
+Entrega/migración/rollback vigente: docs/valerin/DELIVERY-D7-PER-TYPE-20261011.md.
+
+D6 conservado: colocador UUID durable antes de protección; nuevo bloque cambia responsable del objeto
 retirado al colocador. Apilado por otro responsable rechazado antes de consumo. Asignaciones
 completas existentes no se reatribuyen. Raíces superpuestas/alias administrativos comparten
-un presupuesto durable/transitivo100, sin agrupar terrenos independientes por dueño.
+un presupuesto durable/transitivo100 por tipo, sin agrupar terrenos independientes por dueño.
 Cupos por tipo50/60/70/80/90/100 y ventana continua33x33/cap100 se mantienen. Preserva stock,
 loot/XP, callbacks, huevo<=50/venta previa, Mending/Eco y fix Graal .3.
 152 pruebas unitarias y shadowJar aprobados en personal limitado. Simulación standalone
 GraalVM25.0.3:3354 filas históricas/seisrangos uniformes sin negativos; no prueba gameplay.
 Entrega/migración/rollback: docs/valerin/DELIVERY-D6-OVERLAP-PLACER-20261011.md.
-Pendiente después del reinicio diario: log .4, READY, /ss mine colocador, generación y
+Pendiente después del reinicio diario: log .5, READY, /ss mine colocador, generación y
 pruebas de granja compartida/stack/Mending/huevo. No reiniciar/recargar por inferencia.
 Test continúa .2; Sync no modificado. API reciclaje permanece DRAFT/sin proveedor runtime.
 

@@ -1,5 +1,8 @@
 # D6 — colocador y protecciones superpuestas
 
+Política de suma entre tipos sustituida por D7: [cupos por tipo](DELIVERY-D7-PER-TYPE-20261011.md).
+El resto de D6 se conserva; D7 es la entrega actual.
+
 Fuente canónica personal: SmartSpawner, rama work/valerin-production-contract-v1.
 Destino autorizado: Custom, JAR en disco para reinicio diario del propietario. Sin lifecycle.
 

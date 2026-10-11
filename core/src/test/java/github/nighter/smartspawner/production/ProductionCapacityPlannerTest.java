@@ -46,21 +46,21 @@ class ProductionCapacityPlannerTest {
     @Test void sharedFarmAndFriendAccountsCannotAddTheirQuotas() {
         var one = stock("a", "world", 0, 0, "MOB:BLAZE", OWNER, FARM, 80);
         UUID friend = new UUID(0, 4);
-        var two = stock("b", "world", 1000, 0, "MOB:ZOMBIE", friend, FARM, 80);
+        var two = stock("b", "world", 1000, 0, "MOB:BLAZE", friend, FARM, 80);
         var plan = ProductionCapacityPlanner.allocate(List.of(one, two),
                 Map.of(new ProductionCapacityPlanner.Context(OWNER, "world"), 100,
                         new ProductionCapacityPlanner.Context(friend, "world"), 100), 100, 33, 100);
         assertEquals(100, total(plan));
         assertEquals(20, plan.get("b").productive());
     }
-    @Test void spatialCapCrossesChunksCornersAndTypes() {
+    @Test void sameTypeSpatialCapCrossesChunksAndCorners() {
         UUID friend = new UUID(0, 4), otherFarm = new UUID(0, 5);
         var one = stock("a", "world", -1, -1, "MOB:BLAZE", OWNER, FARM, 80);
-        var two = stock("b", "world", 31, 31, "ITEM:DIAMOND", friend, otherFarm, 80);
+        var two = stock("b", "world", 31, 31, "MOB:BLAZE", friend, otherFarm, 80);
         var quotas = Map.of(new ProductionCapacityPlanner.Context(OWNER, "world"), 100,
                 new ProductionCapacityPlanner.Context(friend, "world"), 100);
         assertEquals(100, total(ProductionCapacityPlanner.allocate(List.of(one, two), quotas, 100, 33, 100)));
-        var outside = stock("b", "world", 32, 31, "ITEM:DIAMOND", friend, otherFarm, 80);
+        var outside = stock("b", "world", 32, 31, "MOB:BLAZE", friend, otherFarm, 80);
         assertEquals(160, total(ProductionCapacityPlanner.allocate(List.of(one, outside), quotas, 100, 33, 100)));
     }
     @Test void separateWorldsHaveSeparateGeometryButOwnerTypeIsStillOneBudget() {
@@ -129,12 +129,12 @@ class ProductionCapacityPlannerTest {
         var plan = ProductionCapacityPlanner.allocate(entries, quotas, 100, 33, 100);
         for (int x = -80; x <= 50; x++) {
             for (int z = -80; z <= 50; z++) {
-                int sum = 0;
+                Map<String,Integer> sums = new HashMap<>();
                 for (var grant : plan.values()) {
                     var p = grant.stock();
-                    if (p.x() >= x && p.x() <= x + 32 && p.z() >= z && p.z() <= z + 32) sum += grant.productive();
+                    if (p.x() >= x && p.x() <= x + 32 && p.z() >= z && p.z() <= z + 32) sums.merge(p.type(),grant.productive(),Integer::sum);
                 }
-                assertTrue(sum <= 100, "Window exceeds spatial cap");
+                for (int sum : sums.values()) assertTrue(sum <= 100, "Window/type exceeds spatial cap");
             }
         }
     }
@@ -148,8 +148,8 @@ class ProductionCapacityPlannerTest {
             String id = String.format("%03d", group);
             int x = group * 100 - 4800;
             entries.add(stock(id + "a", "world", x, 0, "MOB:BLAZE", owner, farm, 80));
-            entries.add(stock(id + "b", "world", x + 32, 32, "MOB:ZOMBIE", owner, farm, 21));
-            entries.add(stock(id + "c", "world", x + 16, 16, "MOB:SKELETON", owner, farm, 5));
+            entries.add(stock(id + "b", "world", x + 32, 32, "MOB:BLAZE", owner, farm, 21));
+            entries.add(stock(id + "c", "world", x + 16, 16, "MOB:BLAZE", owner, farm, 5));
         }
         for (int warmup = 0; warmup < 16; warmup++) {
             var plan = ProductionCapacityPlanner.allocate(entries, quotas, 100, 33, 100);
@@ -169,4 +169,40 @@ class ProductionCapacityPlannerTest {
         assertThrows(IllegalArgumentException.class, () -> new ProductionCapacityPlanner.Grant(entry, 26, "PRODUCTIVE"));
         assertEquals(0, new ProductionCapacityPlanner.Grant(entry, 0, "STOCK_HELD").productive());
     }
+    @Test void everyRankCanProduceItsQuotaForEachTypeInOneFarmAndWindow() {
+        for (int tier : List.of(50,60,70,80,90,100)) {
+            var entries=List.of(stock("a","world",0,0,"MOB:BLAZE",OWNER,FARM,100),
+                    stock("b","world",1,0,"MOB:CAVE_SPIDER",OWNER,FARM,100),
+                    stock("c","world",2,0,"MOB:IRON_GOLEM",OWNER,FARM,100));
+            var plan=ProductionCapacityPlanner.allocate(entries,quota(OWNER,"world",tier),100,33,100);
+            assertEquals(tier*3,total(plan));
+            for(var grant:plan.values()) assertEquals(tier,grant.productive());
+        }
+    }
+    @Test void twoStacksPerMobAllowOneHundredOfEachWithoutAddingAccountQuotas() {
+        UUID friend=new UUID(0,8);
+        var entries=List.of(stock("a","world",0,0,"MOB:BLAZE",OWNER,FARM,50),
+                stock("b","world",1,0,"MOB:BLAZE",friend,FARM,50),
+                stock("c","world",2,0,"MOB:CAVE_SPIDER",OWNER,FARM,50),
+                stock("d","world",3,0,"MOB:CAVE_SPIDER",friend,FARM,50),
+                stock("e","world",4,0,"MOB:IRON_GOLEM",OWNER,FARM,50),
+                stock("f","world",5,0,"MOB:IRON_GOLEM",friend,FARM,50),
+                stock("g","world",1000,0,"MOB:BLAZE",friend,FARM,50));
+        var quotas=Map.of(new ProductionCapacityPlanner.Context(OWNER,"world"),100,
+                new ProductionCapacityPlanner.Context(friend,"world"),100);
+        var plan=ProductionCapacityPlanner.allocate(entries,quotas,100,33,100);
+        assertEquals(300,total(plan)); assertEquals(0,plan.get("g").productive());
+        assertEquals(350,plan.values().stream().mapToInt(g->g.stock().quantity()).sum());
+    }
+    @Test void spatialTypesAreIndependentAcrossFarmsIncludingItemSpawners() {
+        UUID friend=new UUID(0,8);
+        var entries=List.of(stock("a","world",0,0,"MOB:BLAZE",OWNER,FARM,80),
+                stock("b","world",32,32,"MOB:BLAZE",friend,friend,80),
+                stock("c","world",16,16,"ITEM:DIAMOND",OWNER,FARM,100));
+        var plan=ProductionCapacityPlanner.allocate(entries,Map.of(new ProductionCapacityPlanner.Context(OWNER,"world"),100,
+                new ProductionCapacityPlanner.Context(friend,"world"),100),100,33,100);
+        assertEquals(200,total(plan)); assertEquals(20,plan.get("b").productive());
+        assertEquals(100,plan.get("c").productive());
+    }
+
 }
