@@ -23,4 +23,24 @@ class OwnSpawnerListingTest {
         assertEquals(1,OwnSpawnerListing.page(viewer,List.of(),0).number());
         assertTrue(OwnSpawnerListing.page(viewer,List.of(),1).entries().isEmpty());
     }
+    @Test void filtersIncludePartialStacksWithoutLeakingForeignTypesOrTotals() {
+        var entries=List.of(entry("partial",viewer),new OwnSpawnerListing.Entry("held",viewer,"w",0,0,0,"MOB:ZOMBIE",50,0),
+                new OwnSpawnerListing.Entry("full",viewer,"w",0,0,0,"MOB:BLAZE",50,50),
+                new OwnSpawnerListing.Entry("foreign",new UUID(0,9),"w",0,0,0,"ITEM:DIAMOND",999,999));
+        var producing=OwnSpawnerListing.page(viewer,entries,1,OwnSpawnerListing.Filter.PRODUCING,null,OwnSpawnerListing.Sort.TYPE);
+        assertEquals(2,producing.blocks());assertEquals(120,producing.stock());assertEquals(100,producing.productive());
+        assertEquals(List.of("MOB:BLAZE","MOB:ZOMBIE"),producing.types());
+        var held=OwnSpawnerListing.page(viewer,entries,1,OwnSpawnerListing.Filter.HELD,null,OwnSpawnerListing.Sort.TYPE);
+        assertEquals(2,held.blocks());assertEquals(120,held.stock());assertEquals(50,held.productive());
+        var mob=OwnSpawnerListing.page(viewer,entries,1,OwnSpawnerListing.Filter.ALL,"MOB:ZOMBIE",OwnSpawnerListing.Sort.TYPE);
+        assertEquals(1,mob.blocks()); assertEquals(50,mob.stock());
+    }
+    @Test void filteredPagesClampAndSortingIsDeterministic() {
+        var entries=List.of(entry("partial",viewer),new OwnSpawnerListing.Entry("full",viewer,"w",0,0,0,"MOB:ZOMBIE",60,60));
+        assertEquals("partial",OwnSpawnerListing.page(viewer,entries,1,OwnSpawnerListing.Filter.ALL,null,OwnSpawnerListing.Sort.STOCK).entries().getFirst().id());
+        assertEquals("full",OwnSpawnerListing.page(viewer,entries,1,OwnSpawnerListing.Filter.ALL,null,OwnSpawnerListing.Sort.PRODUCING).entries().getFirst().id());
+        var empty=OwnSpawnerListing.page(viewer,entries,999,OwnSpawnerListing.Filter.ALL,"ITEM:DIAMOND",OwnSpawnerListing.Sort.TYPE);
+        assertEquals(1,empty.number());assertEquals(0,empty.stock());assertTrue(empty.entries().isEmpty());
+    }
+
 }

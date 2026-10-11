@@ -356,6 +356,10 @@ public final class ProductionCapacityService implements AutoCloseable {
                 spawner.getSpawnerLocation().getWorld().getName()));
     }
     public CompletableFuture<OwnSpawnerListing.Page> ownListing(UUID viewer,int page) {
+        return ownListing(viewer,page,OwnSpawnerListing.Filter.ALL,null,OwnSpawnerListing.Sort.TYPE);
+    }
+    public CompletableFuture<OwnSpawnerListing.Page> ownListing(UUID viewer,int page,OwnSpawnerListing.Filter filter,
+            String type,OwnSpawnerListing.Sort sort) {
         if (closed || !ownershipLoaded) return CompletableFuture.failedFuture(new IllegalStateException("Accounting pending"));
         return CompletableFuture.supplyAsync(() -> {
             Map<String,ProductionCapacityPlanner.Stock> stock=new HashMap<>(persisted);
@@ -375,7 +379,7 @@ public final class ProductionCapacityService implements AutoCloseable {
                 entries.add(new OwnSpawnerListing.Entry(value.id(),owner.owner(),value.world(),value.x(),
                         heights.getOrDefault(value.id(),0),value.z(),value.type(),value.quantity(),productive));
             }
-            return OwnSpawnerListing.page(viewer,entries,page);
+            return OwnSpawnerListing.page(viewer,entries,page,filter,type,sort);
         },worker);
     }
 

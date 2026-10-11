@@ -233,34 +233,41 @@ editloot:
 
 production:
   disabled:
-    message: "Observacion desactivada; requiere reinicio para cambiarla."
+    message: '&#F0C857El informe está desactivado. Cambiarlo requiere reinicio.'
   pending:
-    message: "Primera observacion pendiente."
+    message: '&#F0C857Preparando el primer informe. Inténtalo de nuevo en unos segundos.'
   unavailable:
-    message: "Observacion no disponible; no se muestran datos antiguos como actuales."
+    message: '&#FF6B6BEl informe no está disponible. No mostramos datos antiguos como actuales.'
   summary:
-    message: "Observacion local: {blocks} bloques, {units} unidades guardadas, {invalid} bloques invalidos. Antiguedad {age}s; consulta {duration}ms. Cambios recientes esperan el guardado normal; revisa politica y propiedad."
+    message: '&fRegistro: &#5DB5F1{blocks} bloques &8· &f{units} colocados &8· &f{invalid} inválidos. &7Datos de
+      hace {age}s; consulta {duration}ms. El guardado de cambios recientes es automático.'
   type:
-    message: "{type}: {blocks} bloques, {units} unidades guardadas."
+    message: '&f{type}: &#5DB5F1{blocks} bloques &8· &f{units} colocados.'
   policy:
-    message: "Modo {mode}; estado {state}; capacidad asignada {productive} unidades; plan {duration}ms."
+    message: '&fModo: &#5DB5F1{mode} &8· &fEstado: &#5DB5F1{state} &8· &#37eb9a{productive} habilitados para producir.
+      &7Plan: {duration}ms.'
   detail:
-    message: "Bloque {id}: propietario {owner}; granja {farm}; stock {stock}; cupo por tipo/contexto {quota}; productivas ahora {productive}."
+    message: '&fBloque {id}: &7responsable {owner}; granja {farm}; &f{stock} colocados &8· &#37eb9a{productive}
+      produciendo &8· &fcupo personal por tipo {quota}.'
   target_required:
-    message: "Mira un bloque de SmartSpawner a menos de 8 bloques."
+    message: '&#F0C857Mira un spawner a menos de 8 bloques.'
   owner_required:
-    message: "Usa el nombre exacto de un jugador conectado o su UUID."
+    message: '&#F0C857Indica el nombre exacto del jugador conectado o su UUID.'
   assignment_pending:
-    message: "Asignacion solicitada; espera confirmacion durable."
+    message: '&#F0C857Asignación solicitada. Espera a que confirmemos el guardado.'
   assignment_ok:
-    message: "Propiedad y granja guardadas. El origen del legado sigue sin certificar."
+    message: '&#37eb9aResponsable y granja guardados. &7Esto no certifica el origen del spawner.'
   assignment_failed:
-    message: "Asignacion no confirmada; bloque retenido. Reintenta la asignacion antes de continuar."
+    message: '&#FF6B6BNo se pudo confirmar la asignación. Conservamos el spawner sin producir; solicita una revisión.'
   migration:
-    message: "Migracion automatica: {assigned} bloques asignados en este arranque; {unresolved} pendientes."
-
+    message: '&fAsignación automática: &#37eb9a{assigned} bloques &8· &#F0C857{unresolved} pendientes de revisar.'
 mine:
   pending:
-    message: "El registro de tus spawners se esta preparando. Intenta de nuevo en unos segundos."
+    message: '&#F0C857Estamos preparando tu lista. Inténtalo de nuevo en unos segundos.'
+    sound: block.note_block.pling
   empty:
-    message: "Aun no tienes spawners asignados a tu cupo. La migracion puede estar pendiente."
+    message: '&#F0C857No tienes spawners asignados todavía. Si ya los colocaste, la asignación puede estar pendiente.'
+    sound: block.note_block.pling
+  no_results:
+    message: '&#F0C857No hay spawners que coincidan con estos filtros. Cámbialos para ver el resto.'
+    sound: block.note_block.pling

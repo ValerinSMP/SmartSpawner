@@ -295,25 +295,57 @@ editloot:
     name: '&cĐộ bền phải là số nguyên, và min không lớn hơn max.'
 
 
-mine_title: "My spawners"
+mine_title: '{stock} placed · {productive} producing'
 mine_item:
-  name: "&f{type}"
+  name: '&f{type} &#5DB5F1· {stock} placed'
   lore:
-    - "&7World: &f{world}"
-    - "&7Location: &f{x}, {y}, {z}"
-    - "&7Saved units: &f{stock}"
-    - "&7Productive: &a{productive}"
-    - "&7Held: &e{held}"
-    - "&7Assigned to your productive capacity."
+  - '&7Producing: &a{productive}'
+  - '&7Not producing: &e{held}'
+  - '&7Assigned to you'
+  - '&7World: {world}'
+  - '&7Location: {x}, {y}, {z}'
 mine_previous:
-  name: "&fPrevious page"
+  name: '&aPrevious page'
   lore: []
 mine_next:
-  name: "&fNext page"
+  name: '&aNext page'
   lore: []
 mine_close:
-  name: "&fClose"
+  name: '&cClose'
   lore:
-    - "&7Page {page}/{pages}"
-    - "&7{blocks} blocks, {stock} units."
-    - "&7{productive} productive units."
+  - '&7Page {page}/{pages}'
+mine_filter:
+  name: '&fFilter &#5DB5F1spawners'
+  lore:
+  - '&7State: {filter}'
+  - '&bClick to change'
+
+mine_type:
+  name: '&fFilter &#5DB5F1type'
+  lore:
+  - '&7Type: {type}'
+  - '&bClick to change'
+
+mine_sort:
+  name: '&fSort &#5DB5F1spawners'
+  lore:
+  - '&7Order: {sort}'
+  - '&bClick to change'
+
+mine_summary:
+  name: '&b{stock} placed · &a{productive} producing'
+  lore:
+  - '&7Filtered blocks: {blocks}'
+  - '&7Page {page}/{pages}'
+  - '&7Producing means assigned capacity.'
+  - '&7Needs nearby players and must not be paused.'
+  - '&7Farm capacity is shared per type.'
+
+mine_labels:
+  all: All
+  filter_all: All
+  filter_producing: Producing
+  filter_held: With held units
+  sort_type: Type
+  sort_stock: Most placed first
+  sort_producing: Most producing first

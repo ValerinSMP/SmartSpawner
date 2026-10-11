@@ -1,12 +1,19 @@
-# SmartSpawner — D7 por tipo instalado, activación pendiente
+# SmartSpawner — D8 mine español instalado, activación pendiente
 2026-10-11. Fuente canónica personal: /root/development/projects/forks/upstream/SmartSpawner.
-Rama work/valerin-production-contract-v1; versión 1.8.3-valerin-production.5.
-Custom activo .3; .5 instalado en disco para reinicio diario del propietario. Sin lifecycle.
-SHA256 0c191d7eef15dd137f867834d061540644e25b307a17c46fce4cb128f110e91f.
+Rama work/valerin-production-contract-v1; versión 1.8.3-valerin-production.6.
+Custom activo .3; .6 instalado en disco para reinicio diario del propietario. Sin lifecycle.
+SHA256 605ea7afe42608f4c1c803be379e11889294fca6c19d5c42a25fd7dfeafee7e7.
 Backup original .3 HDD smartspawner-custom-overlap-fix-20261011T212446Z.
 Backup final HDD smartspawner-custom-overlap-fix-20261011T212643Z (candidato intermedio .4).
 Ambos snapshots SQLite consistentes/integrity ok:3182 bloques/18878 unidades al respaldo;
 config intacta, ningún restore/SQL directo a stock. Los conteos son actuales, no snapshot inicial3354.
+
+D8 interfaz: /ss mine español, título y resumen colocados/produciendo, filtros estado/mob,
+orden y paginación propios. Colores/sonido de /ss list.157tests+shadowJar personal/YAML validado.
+3archivos de idioma Custom actualizados solo claves de esta entrega; resto semántico preservado.
+Backup HDD smartspawner-custom-mine-ui-20261011T220438Z (.5 previa), SQLite consistente
+3171bloques/18816unidades/integrityok/config intacta. Sin lifecycle. Gameplay GUI pendiente.
+Entrega/rollback vigente: docs/valerin/DELIVERY-D8-MINE-SPANISH-20261011.md.
 
 D7 decisión vigente: granja100/tipo y ventana33x33 cap100/tipo, entre jugadores y todas
 las alturas. Corrige suma entre tipos de D3–D6. Stack50 continúa activo tras reload previo.
@@ -24,7 +31,7 @@ loot/XP, callbacks, huevo<=50/venta previa, Mending/Eco y fix Graal .3.
 152 pruebas unitarias y shadowJar aprobados en personal limitado. Simulación standalone
 GraalVM25.0.3:3354 filas históricas/seisrangos uniformes sin negativos; no prueba gameplay.
 Entrega/migración/rollback: docs/valerin/DELIVERY-D6-OVERLAP-PLACER-20261011.md.
-Pendiente después del reinicio diario: log .5, READY, /ss mine colocador, generación y
+Pendiente después del reinicio diario: log .6, READY, /ss mine colocador, generación y
 pruebas de granja compartida/stack/Mending/huevo. No reiniciar/recargar por inferencia.
 Test continúa .2; Sync no modificado. API reciclaje permanece DRAFT/sin proveedor runtime.
 

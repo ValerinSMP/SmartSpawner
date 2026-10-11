@@ -261,6 +261,8 @@ production:
 
 mine:
   pending:
-    message: "Your spawner register is being prepared. Try again in a few seconds."
+    message: '&eYour list is being prepared. Try again shortly.'
   empty:
-    message: "No placed spawners are assigned to your capacity yet. Migration may still be pending."
+    message: '&eNo spawners assigned to you yet. Assignment may be pending.'
+  no_results:
+    message: '&eNo matching spawners. Change the filters to see the rest.'

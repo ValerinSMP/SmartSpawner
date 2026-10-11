@@ -80,9 +80,8 @@ spawner_different:
   sound: block.note_block.pling
 
 spawner_stack_full:
-  action_bar: '&#FF4444Límite máximo de apilamiento: &f{max}'
+  message: '&#F0C857Este stack llegó al máximo de &f{max} unidades&#F0C857. Coloca otro bloque propio.'
   sound: block.note_block.pling
-
 spawner_stack_success:
   action_bar: '&aHas apilado con éxito &f{amount} &agenerador(es).'
   sound: entity.player.levelup
@@ -139,13 +138,15 @@ sell_and_exp_success_with_mending:
   message: 'Has vendido &e{amount} &fobjeto(s) por &a${price}&f y recolectado &a{exp} &fde experiencia &f(&c{exp_mending} &fusada en reparación).'
   action_bar: '&a+${price} &f| &a+{exp} experiencia &f(&c-{exp_mending} reparación)'
 egg_change_stacked_not_allowed:
-  message: '&cNo puedes cambiar el tipo de un spawner apilado. Máximo: {max_stack}; actual: {current_stack}.'
-
+  message: '&#F0C857Este stack supera &f{max_stack} unidades&#F0C857. Sepáralo antes de cambiar su tipo con un huevo.'
+  sound: block.note_block.pling
 egg_change_sale_blocked:
   message: "No se puede cambiar el tipo: recoge los objetos sin precio o habilita la venta."
 
 production_mixed_ownership:
-  message: "No se pueden mezclar propietarios en un bloque. Coloca aparte o transfiere la propiedad explicitamente."
-
+  message: '&#F0C857No puedes añadir unidades a un stack de otro responsable ni mezclar propietarios. &fColoca un
+    bloque propio o solicita una transferencia.'
+  sound: block.note_block.pling
 production_stock_status:
-  message: "{stock} unidades conservadas: {productive} productivas y {held} retenidas. No se borran spawners, loot ni XP."
+  message: '&f{stock} colocados &8· &#37eb9a{productive} produciendo &8· &#F0C857{held} sin producir. &7Tus spawners,
+    loot y XP se conservan.'

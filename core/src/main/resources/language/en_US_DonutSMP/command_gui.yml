@@ -295,25 +295,74 @@ editloot:
     name: '&cDurability must be whole numbers, and min not above max.'
 
 
-mine_title: "My spawners"
+mine_title: '{stock} colocados · {productive} produciendo'
 mine_item:
-  name: "&f{type}"
+  name: '&f{type} &#5DB5F1· {stock} colocados'
   lore:
-    - "&7World: &f{world}"
-    - "&7Location: &f{x}, {y}, {z}"
-    - "&7Saved units: &f{stock}"
-    - "&7Productive: &a{productive}"
-    - "&7Held: &e{held}"
-    - "&7Assigned to your productive capacity."
+  - ''
+  - ' &#5DB5F1ℹ Tus spawners:'
+  - '  &8• &fProduciendo: &#37eb9a{productive}'
+  - '  &8• &fSin producir: &#F0C857{held}'
+  - '  &8• &fResponsable: &#37eb9aTú'
+  - '  &8• &fMundo: &e{world}'
+  - '  &8• &fUbicación: &7{x}, {y}, {z}'
+  - ''
+  - '&7Las unidades sin producir se conservan.'
 mine_previous:
-  name: "&fPrevious page"
-  lore: []
-mine_next:
-  name: "&fNext page"
-  lore: []
-mine_close:
-  name: "&fClose"
+  name: '&#37eb9aPágina anterior'
   lore:
-    - "&7Page {page}/{pages}"
-    - "&7{blocks} blocks, {stock} units."
-    - "&7{productive} productive units."
+  - '&#2cc483 ▸ &fHaz clic para retroceder'
+mine_next:
+  name: '&#37eb9aPágina siguiente'
+  lore:
+  - '&#2cc483 ▸ &fHaz clic para avanzar'
+mine_close:
+  name: '&#FF6B6BCerrar'
+  lore:
+  - '&7Página {page}/{pages}'
+  - '&#FF6B6B ▸ &fHaz clic para cerrar'
+mine_filter:
+  name: '&fFiltrar &#5DB5F1spawners'
+  lore:
+  - ''
+  - '  &8• &fEstado: &#5DB5F1{filter}'
+  - ''
+  - '&#5DB5F1 ▸ Haz clic para cambiar'
+
+mine_type:
+  name: '&fFiltrar por &#5DB5F1criatura'
+  lore:
+  - ''
+  - '  &8• &fTipo: &#5DB5F1{type}'
+  - ''
+  - '&#5DB5F1 ▸ Haz clic para cambiar'
+
+mine_sort:
+  name: '&fOrdenar &#5DB5F1spawners'
+  lore:
+  - ''
+  - '  &8• &fOrden: &#5DB5F1{sort}'
+  - ''
+  - '&#5DB5F1 ▸ Haz clic para cambiar'
+
+mine_summary:
+  name: '&#5DB5F1{stock} colocados &8· &#37eb9a{productive} produciendo'
+  lore:
+  - ''
+  - ' &#5DB5F1ℹ Resumen del filtro:'
+  - '  &8• &fBloques: &e{blocks}'
+  - '  &8• &fPágina: &e{page}/{pages}'
+  - ''
+  - '&7Produciendo indica el cupo habilitado.'
+  - '&7Para generar loot necesitan un jugador cerca'
+  - '&7y no estar pausados.'
+  - '&7El cupo se comparte por tipo de criatura.'
+
+mine_labels:
+  all: Todos
+  filter_all: Todos
+  filter_producing: Produciendo
+  filter_held: Con unidades sin producir
+  sort_type: Tipo de criatura
+  sort_stock: Más colocados primero
+  sort_producing: Más produciendo primero
