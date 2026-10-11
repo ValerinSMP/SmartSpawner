@@ -20,3 +20,5 @@ Siguiente: comprobar arranque Custom, migracion y MSPT/TPS. Propietario autoriza
 
 Lectura actual Custom:3354 bloques,23729 unidades,424 actores distintos; cero last_actor vacios.
 Test log confirma migracion3 bloques/unresolved0; no equivale a prueba de escala Custom.
+
+Custom segundo reinicio propietario 18:56:55Z: SQLite recuperado tras permisos WAL/SHM y conexiones renovadas. Migracion3172 asignados/182 pendientes (log15:59:41); checkpoint3354. TPS reciente20.1/MSPT44-47, workers idle. Pendiente READY/cupos/gameplay y182 pendientes. Cierre anterior10 filas sucias fallaron SQLITE_READONLY: ultimos cambios no confirmados, sin restaurar DB. Lecturas SQLite futuras con UID servidor999/GID987.
