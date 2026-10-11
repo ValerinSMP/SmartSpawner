@@ -59,3 +59,5 @@ This project is licensed under the GPLv3 License - see the [LICENSE](LICENSE) fi
 
 [Production ownership and unit API draft](docs/valerin/PRODUCTION-OWNERSHIP-API-V1.md).
 D1 contains offline simulation and a draft interface; no recycling provider or production limits are active.
+
+[Valerin D3 Test delivery, migration and rollback](docs/valerin/DELIVERY-D3-PRODUCTION-20261011.md).

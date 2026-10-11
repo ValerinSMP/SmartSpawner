@@ -16,6 +16,10 @@ prefix: "SmartSpawner"
 # Dependencies
 dependencies:
   server:
+    LuckPerms:
+      load: BEFORE
+      required: false
+      join-classpath: true
     # Shop Plugins
     EconomyShopGUI:
       load: AFTER
@@ -129,6 +133,24 @@ dependencies:
 
 # Permissions
 permissions:
+  smartspawner.production.admin:
+    description: Explicitly assign or transfer production ownership and farm
+    default: op
+  smartspawner.production.capacity.60:
+    description: Per-type production capacity 60
+    default: false
+  smartspawner.production.capacity.70:
+    description: Per-type production capacity 70
+    default: false
+  smartspawner.production.capacity.80:
+    description: Per-type production capacity 80
+    default: false
+  smartspawner.production.capacity.90:
+    description: Per-type production capacity 90
+    default: false
+  smartspawner.production.capacity.100:
+    description: Per-type production capacity 100
+    default: false
   smartspawner.command.production:
     description: View persisted stock observation
     default: op

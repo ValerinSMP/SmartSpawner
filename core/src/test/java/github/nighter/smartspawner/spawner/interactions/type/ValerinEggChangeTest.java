@@ -13,8 +13,8 @@ class ValerinEggChangeTest {
 
     @Test
     void configuredLimitAndLegacyDisableValuesAreHonored() {
-        assertFalse(SpawnEggHandler.exceedsEggChangeStackLimit(5, 5));
-        assertTrue(SpawnEggHandler.exceedsEggChangeStackLimit(6, 5));
+        assertFalse(SpawnEggHandler.exceedsEggChangeStackLimit(50, 50));
+        assertTrue(SpawnEggHandler.exceedsEggChangeStackLimit(51, 50));
         assertFalse(SpawnEggHandler.exceedsEggChangeStackLimit(1000, 0));
         assertFalse(SpawnEggHandler.exceedsEggChangeStackLimit(1000, -1));
     }

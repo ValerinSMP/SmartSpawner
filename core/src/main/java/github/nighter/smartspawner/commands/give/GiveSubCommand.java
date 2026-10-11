@@ -239,6 +239,9 @@ public class GiveSubCommand extends BaseSubCommand {
             }
             Player target = players.get(0);
 
+            spawnerItem = spawnerItem.clone();
+            plugin.getProductionOwnershipItem().write(spawnerItem,
+                    new github.nighter.smartspawner.production.ProductionOwnershipRepository.Ownership(target.getUniqueId(), null));
             giveOrDropOverflow(target, spawnerItem);
             target.playSound(target.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
 

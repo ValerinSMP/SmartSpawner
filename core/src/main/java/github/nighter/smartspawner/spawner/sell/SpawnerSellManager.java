@@ -132,6 +132,42 @@ public class SpawnerSellManager {
     }
 
     /**
+     * Region-thread sale before an egg change. No async continuation can race the change.
+     * Unsellable stock blocks the change; existing sale event/deposit/removal remain authoritative.
+     */
+    public boolean sellBeforeTypeChange(Player player, SpawnerData spawner) {
+        if (!spawner.startSelling()) {
+            messageService.sendMessage(player, "action_in_progress");
+            return false;
+        }
+        try {
+            if (spawner.getVirtualInventory().getUsedSlots() == 0) return true;
+            if (!plugin.hasSellIntegration()) {
+                messageService.sendMessage(player, "egg_change_sale_blocked");
+                return false;
+            }
+            Map<ItemSignature, Long> items = spawner.getVirtualInventory().getConsolidatedItems();
+            Map<String, Double> prices = spawner.createPriceCache();
+            TypeChangeSalePlan plan;
+            try {
+                plan = TypeChangeSalePlan.requireAllPriced(items, item -> spawner.findItemPrice(item, prices));
+            } catch (IllegalArgumentException invalid) {
+                messageService.sendMessage(player, "egg_change_sale_blocked");
+                return false;
+            }
+            spawnerGuiViewManager.closeAllViewersInventory(spawner);
+            applySellResult(player, spawner, calculateSellValue(items, plan.value()), 0, 0);
+            return spawner.getVirtualInventory().getUsedSlots() == 0;
+        } catch (Exception failure) {
+            plugin.getLogger().warning("Egg-change sale failed; type and egg preserved.");
+            messageService.sendMessage(player, "action_failed");
+            return false;
+        } finally {
+            spawner.stopSelling();
+        }
+    }
+
+    /**
      * Applies the sell result on the spawner's region/main thread.
      * Called while {@code spawner.isSelling()} is true; {@code stopSelling()} is the caller's
      * responsibility via the surrounding finally block.

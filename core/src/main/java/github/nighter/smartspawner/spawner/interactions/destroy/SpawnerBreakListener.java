@@ -102,6 +102,11 @@ public class SpawnerBreakListener implements Listener {
 
         boolean breakHandled;
         if (spawner != null) {
+            if (plugin.getProductionCapacityService() != null && !plugin.getProductionCapacityService().canMutate(spawner.getSpawnerId())) {
+                event.setCancelled(true);
+                messageService.sendMessage(player, "action_in_progress");
+                return;
+            }
             breakHandled = handleSmartSpawnerBreak(block, spawner, player);
         } else {
             CreatureSpawner creatureSpawner = (CreatureSpawner) block.getState(false);
@@ -262,6 +267,9 @@ public class SpawnerBreakListener implements Listener {
                     spawner.getConfigName(), spawner.getEntityType(), 1);
         }
 
+        template = template.clone();
+        if (plugin.getProductionOwnershipItem() != null) plugin.getProductionOwnershipItem().write(template,
+                plugin.getProductionCapacityService().ownership(spawner.getSpawnerId()));
         int dropAmount;
         boolean shouldDeleteSpawner;
         int newStackSize = currentStackSize;
@@ -568,6 +576,8 @@ public class SpawnerBreakListener implements Listener {
     }
 
     interface BreakPluginContext {
+        default github.nighter.smartspawner.production.ProductionCapacityService getProductionCapacityService() { return null; }
+        default github.nighter.smartspawner.production.ProductionOwnershipItem getProductionOwnershipItem() { return null; }
         MessageService getMessageService();
         SpawnerManager getSpawnerManager();
         HopperService getHopperService();
@@ -588,6 +598,8 @@ public class SpawnerBreakListener implements Listener {
             this.plugin = plugin;
         }
 
+        @Override public github.nighter.smartspawner.production.ProductionCapacityService getProductionCapacityService() { return plugin.getProductionCapacityService(); }
+        @Override public github.nighter.smartspawner.production.ProductionOwnershipItem getProductionOwnershipItem() { return plugin.getProductionOwnershipItem(); }
         @Override public MessageService getMessageService() { return plugin.getMessageService(); }
         @Override public SpawnerManager getSpawnerManager() { return plugin.getSpawnerManager(); }
         @Override public HopperService getHopperService() { return plugin.getHopperService(); }

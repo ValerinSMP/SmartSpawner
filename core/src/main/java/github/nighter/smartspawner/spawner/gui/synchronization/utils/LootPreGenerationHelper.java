@@ -68,10 +68,16 @@ public final class LootPreGenerationHelper {
                     return;
                 }
 
-                plugin.getSpawnerLootGenerator().preGenerateLoot(spawner, (items, experience) -> {
-                    spawner.storePreGeneratedLoot(items, experience);
-                    spawner.setPreGenerating(false);
-                });
+                long revision = spawner.getLootRevision().get();
+                long capacityRevision = spawner.capacityRevision();
+                plugin.getSpawnerLootGenerator().preGenerateLoot(spawner, (items, experience) ->
+                        Scheduler.runLocationTask(spawnerLocation, () -> {
+                            if (spawner.getLootRevision().get() != revision) return;
+                            if (spawner.capacityRevision() != capacityRevision) { spawner.setPreGenerating(false); return; }
+                            spawner.storePreGeneratedLoot(items, experience, revision, capacityRevision);
+                            spawner.setPreGenerating(false);
+                        }));
+
             });
         }
     }
@@ -116,11 +122,10 @@ public final class LootPreGenerationHelper {
                                 }
 
                                 if (spawner.hasPreGeneratedLoot()) {
-                                    Map<ItemSignature, Long> items = spawner.getAndClearPreGeneratedItems();
-                                    long exp = spawner.getAndClearPreGeneratedExperience();
+                                    var batch = spawner.takePreGeneratedLoot();
 
                                     // Add the loot with scheduled spawn time for accurate timer reset
-                                    plugin.getSpawnerLootGenerator().addPreGeneratedLoot(spawner, items, exp, scheduledSpawnTime);
+                                    plugin.getSpawnerLootGenerator().addPreGeneratedLoot(spawner, batch, scheduledSpawnTime);
                                 }
                             });
                         }

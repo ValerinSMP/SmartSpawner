@@ -140,3 +140,12 @@ sell_and_exp_success_with_mending:
   action_bar: '&a+${price} &f| &a+{exp} experiencia &f(&c-{exp_mending} reparación)'
 egg_change_stacked_not_allowed:
   message: '&cNo puedes cambiar el tipo de un spawner apilado. Máximo: {max_stack}; actual: {current_stack}.'
+
+egg_change_sale_blocked:
+  message: "No se puede cambiar el tipo: recoge los objetos sin precio o habilita la venta."
+
+production_mixed_ownership:
+  message: "No se pueden mezclar propietarios en un bloque. Coloca aparte o transfiere la propiedad explicitamente."
+
+production_stock_status:
+  message: "{stock} unidades conservadas: {productive} productivas y {held} retenidas. No se borran spawners, loot ni XP."

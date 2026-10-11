@@ -1,0 +1,70 @@
+package github.nighter.smartspawner.production;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import java.nio.file.Path;
+import java.sql.*;
+import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.*;
+
+class ProductionOwnershipRepositoryTest {
+    private static final UUID OWNER = new UUID(0, 1), FARM = new UUID(0, 2);
+    private void source(Connection connection) throws Exception {
+        connection.createStatement().execute("CREATE TABLE stock (spawner_id TEXT, world TEXT, loc_x INTEGER, loc_z INTEGER,"
+                + "entity_type TEXT, itemspawner_type TEXT, stack_size INTEGER, exp INTEGER)");
+        connection.createStatement().execute("INSERT INTO stock VALUES ('legacy','unloaded',15,16,'BLAZE',NULL,150,42)");
+    }
+    @Test void additiveMigrationDoesNotAttributeLegacyAndCountsUnloadedStack() throws Exception {
+        try (var connection = DriverManager.getConnection("jdbc:sqlite::memory:")) {
+            source(connection);
+            var repository = new ProductionOwnershipRepository("stock");
+            repository.initialize(connection);
+            repository.initialize(connection);
+            var owners = repository.owners(connection);
+            assertTrue(owners.isEmpty());
+            var stock = repository.stock(connection, owners).get("legacy");
+            assertEquals(150, stock.quantity());
+            assertNull(stock.owner());
+            var xp = connection.createStatement().executeQuery("SELECT exp FROM stock");
+            assertTrue(xp.next());
+            assertEquals(42, xp.getLong(1));
+        }
+    }
+    @Test void assignmentAndTransferRemainDurableAfterRestart(@TempDir Path directory) throws Exception {
+        String url = "jdbc:sqlite:" + directory.resolve("state.db");
+        var repository = new ProductionOwnershipRepository("stock");
+        try (var connection = DriverManager.getConnection(url)) {
+            source(connection);
+            repository.initialize(connection);
+            repository.assign(connection, "legacy", new ProductionOwnershipRepository.Ownership(OWNER, FARM), "ADMIN_ASSIGN");
+        }
+        UUID next = new UUID(0, 3);
+        try (var connection = DriverManager.getConnection(url)) {
+            assertEquals(OWNER, repository.owners(connection).get("legacy").owner());
+            repository.assign(connection, "legacy", new ProductionOwnershipRepository.Ownership(next, FARM), "ADMIN_TRANSFER");
+            repository.assign(connection, "legacy", new ProductionOwnershipRepository.Ownership(next, FARM), "ADMIN_TRANSFER");
+        }
+        try (var connection = DriverManager.getConnection(url)) {
+            var owners = repository.owners(connection);
+            assertEquals(1, owners.size());
+            assertEquals(next, owners.get("legacy").owner());
+            assertEquals(150, repository.stock(connection, owners).get("legacy").quantity());
+        }
+    }
+    @Test void interruptedTransferRollsBackPreviousOwner() throws Exception {
+        try (var connection = DriverManager.getConnection("jdbc:sqlite::memory:")) {
+            source(connection);
+            var repository = new ProductionOwnershipRepository("stock");
+            repository.initialize(connection);
+            repository.assign(connection, "legacy", new ProductionOwnershipRepository.Ownership(OWNER, FARM), "ADMIN_ASSIGN");
+            connection.createStatement().execute("CREATE TRIGGER fail_transfer BEFORE INSERT ON stock_production_owners_v1 BEGIN SELECT RAISE(ABORT,'simulated failure'); END");
+            assertThrows(SQLException.class, () -> repository.assign(connection, "legacy",
+                    new ProductionOwnershipRepository.Ownership(new UUID(0, 3), FARM), "ADMIN_TRANSFER"));
+            assertEquals(OWNER, repository.owners(connection).get("legacy").owner());
+            var history = connection.createStatement().executeQuery("SELECT COUNT(*) FROM stock_production_owner_events_v1");
+            assertTrue(history.next());
+            assertEquals(1, history.getInt(1)); // failed transfer cannot leave a committed audit/assignment split
+            assertTrue(connection.getAutoCommit());
+        }
+    }
+}

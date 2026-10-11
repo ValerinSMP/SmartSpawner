@@ -239,6 +239,20 @@ production:
   unavailable:
     message: "Observacion no disponible; no se muestran datos antiguos como actuales."
   summary:
-    message: "Observacion local: {blocks} bloques, {units} unidades guardadas, {invalid} bloques invalidos. Antiguedad {age}s; consulta {duration}ms. Propiedad sin resolver; limites inactivos. Cambios recientes esperan el guardado normal."
+    message: "Observacion local: {blocks} bloques, {units} unidades guardadas, {invalid} bloques invalidos. Antiguedad {age}s; consulta {duration}ms. Cambios recientes esperan el guardado normal; revisa politica y propiedad."
   type:
     message: "{type}: {blocks} bloques, {units} unidades guardadas."
+  policy:
+    message: "Modo {mode}; estado {state}; capacidad asignada {productive} unidades; plan {duration}ms."
+  detail:
+    message: "Bloque {id}: propietario {owner}; granja {farm}; stock {stock}; cupo por tipo/contexto {quota}; productivas ahora {productive}."
+  target_required:
+    message: "Mira un bloque de SmartSpawner a menos de 8 bloques."
+  owner_required:
+    message: "Usa el nombre exacto de un jugador conectado o su UUID."
+  assignment_pending:
+    message: "Asignacion solicitada; espera confirmacion durable."
+  assignment_ok:
+    message: "Propiedad y granja guardadas. El origen del legado sigue sin certificar."
+  assignment_failed:
+    message: "Asignacion no confirmada; bloque retenido. Reintenta la asignacion antes de continuar."

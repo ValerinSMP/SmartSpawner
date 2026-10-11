@@ -24,6 +24,7 @@ dependencies {
     shade(libs.mariadb)
     shade(libs.bstats)
     compileOnly(libs.sqlite)
+    compileOnly("net.luckperms:api:5.4")
 
     compileOnly(libs.worldguard) // also supplies WorldEdit, for BukkitAdapter
     compileOnly(libs.shopgui) {

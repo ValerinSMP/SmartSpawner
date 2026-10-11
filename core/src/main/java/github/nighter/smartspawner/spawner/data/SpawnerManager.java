@@ -107,6 +107,7 @@ public class SpawnerManager {
 
         // Queue for saving
         spawnerStorage.queueSpawnerForSaving(id);
+        if (plugin.getProductionCapacityService() != null) plugin.getProductionCapacityService().touch(spawner);
     }
 
     public void removeSpawner(String id) {
@@ -244,6 +245,7 @@ public class SpawnerManager {
 
                 Scheduler.runTask(() -> {
                     removeSpawner(spawnerId);
+                    if (plugin.getProductionCapacityService() != null) plugin.getProductionCapacityService().remove(spawnerId);
                     spawnerStorage.markSpawnerDeleted(spawnerId);
                 });
             });
@@ -256,10 +258,12 @@ public class SpawnerManager {
      * @param spawnerId The ID of the modified spawner
      */
     public void markSpawnerModified(String spawnerId) {
+        if (plugin.getProductionCapacityService() != null) plugin.getProductionCapacityService().touch(spawners.get(spawnerId));
         spawnerStorage.markSpawnerModified(spawnerId);
     }
 
     public void markSpawnerDeleted(String spawnerId) {
+        if (plugin.getProductionCapacityService() != null) plugin.getProductionCapacityService().remove(spawnerId);
         spawnerStorage.markSpawnerDeleted(spawnerId);
     }
 

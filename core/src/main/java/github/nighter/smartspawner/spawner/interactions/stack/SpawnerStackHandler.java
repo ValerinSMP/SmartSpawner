@@ -205,6 +205,16 @@ public class SpawnerStackHandler {
 
     private boolean processStackAddition(Player player, SpawnerData targetSpawner, ItemStack itemInHand,
                                          boolean stackAll, int currentStack, int maxStackSize) {
+        if (!plugin.getProductionCapacityService().canMutate(targetSpawner.getSpawnerId())) {
+            messageService.sendMessage(player, "action_in_progress");
+            return false;
+        }
+        var currentOwner = plugin.getProductionCapacityService().ownership(targetSpawner.getSpawnerId());
+        var incomingOwner = plugin.getProductionOwnershipItem().read(itemInHand);
+        if (!java.util.Objects.equals(currentOwner, incomingOwner)) {
+            messageService.sendMessage(player, "production_mixed_ownership");
+            return false;
+        }
         int itemAmount = itemInHand.getAmount();
         int spaceLeft = maxStackSize - currentStack;
 

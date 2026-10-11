@@ -236,6 +236,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     @Override
     public void markSpawnerDeleted(String spawnerId) {
         if (spawnerId != null) {
+            if (plugin.getProductionCapacityService() != null) plugin.getProductionCapacityService().remove(spawnerId);
             deletedSpawners.add(spawnerId);
             dirtySpawners.remove(spawnerId);
             locationCache.remove(spawnerId);

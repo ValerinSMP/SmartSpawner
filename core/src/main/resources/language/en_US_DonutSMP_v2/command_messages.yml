@@ -239,6 +239,20 @@ production:
   unavailable:
     message: "Observation unavailable; stale stock is not presented as current."
   summary:
-    message: "Local observation: {blocks} blocks, {units} saved units, {invalid} invalid blocks. Age {age}s; query {duration}ms. Ownership unresolved; limits inactive. Recent changes await normal autosave."
+    message: "Local observation: {blocks} blocks, {units} saved units, {invalid} invalid blocks. Age {age}s; query {duration}ms. Recent changes await normal autosave; see production policy and ownership detail."
   type:
     message: "{type}: {blocks} blocks, {units} saved units."
+  policy:
+    message: "Mode {mode}; status {state}; assigned capacity {productive} units; plan {duration}ms."
+  detail:
+    message: "Block {id}: owner {owner}; farm {farm}; stock {stock}; per-type/context quota {quota}; productive now {productive}."
+  target_required:
+    message: "Look at a SmartSpawner block within 8 blocks."
+  owner_required:
+    message: "Use the exact online player name or an owner UUID."
+  assignment_pending:
+    message: "Assignment requested; awaiting durable confirmation."
+  assignment_ok:
+    message: "Ownership and farm saved. Legacy origin is still unverified."
+  assignment_failed:
+    message: "Assignment unconfirmed; block fenced. Retry the assignment before continuing."

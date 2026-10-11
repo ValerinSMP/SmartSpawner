@@ -58,6 +58,8 @@ public class SpawnerLootGenerator {
             // Declare variables outside the try block so they're accessible in the async lambda
             final long currentTime = System.currentTimeMillis();
             final long spawnTime;
+            final long expectedRevision = spawner.getLootRevision().get();
+            final long expectedCapacityRevision = spawner.capacityRevision();
             final int minMobs;
             final int maxMobs;
 
@@ -78,8 +80,10 @@ public class SpawnerLootGenerator {
                 }
 
                 // Important: Store the current values we need for async processing
-                minMobs = spawner.getMinMobs();
-                maxMobs = spawner.getMaxMobs();
+                int productive = plugin.getProductionCapacityService().productive(spawner);
+                if (productive <= 0) return;
+                minMobs = (int) Math.min(Integer.MAX_VALUE - 1L, (long) spawner.getBaseMinMobs() * productive);
+                maxMobs = (int) Math.min(Integer.MAX_VALUE - 1L, (long) spawner.getBaseMaxMobs() * productive);
                 // Store currentTime to update lastSpawnTime after successful loot addition
                 spawnTime = currentTime;
             } finally {
@@ -88,7 +92,8 @@ public class SpawnerLootGenerator {
 
             // Run heavy calculations async and batch updates using the Scheduler
             Scheduler.runTaskAsync(() -> {
-                // Generate loot with full mob count
+                if (spawner.getLootRevision().get() != expectedRevision || spawner.capacityRevision() != expectedCapacityRevision || spawner.isSelling()) return;
+                // Generate loot with the captured revision
                 LootResult loot = generateLoot(minMobs, maxMobs, spawner);
 
                 // Only proceed if we generated something
@@ -107,7 +112,9 @@ public class SpawnerLootGenerator {
                         return;
                     }
 
-                    try {
+                    try (var allocation = plugin.getProductionCapacityService().acquire(spawner, expectedCapacityRevision)) {
+                        if (allocation == null || spawner.getLootRevision().get() != expectedRevision
+                                || spawner.capacityRevision() != expectedCapacityRevision || spawner.isSelling()) return;
                         // Modified approach: Handle items and exp separately
                         boolean changed = false;
 
@@ -422,6 +429,8 @@ public class SpawnerLootGenerator {
                 return;
             }
 
+            final long expectedRevision = spawner.getLootRevision().get();
+            final long expectedCapacityRevision = spawner.capacityRevision();
             final int minMobs;
             final int maxMobs;
             try {
@@ -434,15 +443,27 @@ public class SpawnerLootGenerator {
                     return;
                 }
 
-                minMobs = spawner.getMinMobs();
-                maxMobs = spawner.getMaxMobs();
+                int productive = plugin.getProductionCapacityService().productive(spawner);
+                if (productive <= 0) {
+                    callback.onLootGenerated(Collections.emptyMap(), 0);
+                    return;
+                }
+                minMobs = (int) Math.min(Integer.MAX_VALUE - 1L, (long) spawner.getBaseMinMobs() * productive);
+                maxMobs = (int) Math.min(Integer.MAX_VALUE - 1L, (long) spawner.getBaseMaxMobs() * productive);
             } finally {
                 spawner.getDataLock().unlock();
             }
 
             Scheduler.runTaskAsync(() -> {
+                if (spawner.getLootRevision().get() != expectedRevision || spawner.capacityRevision() != expectedCapacityRevision || spawner.isSelling()) {
+                    callback.onLootGenerated(Collections.emptyMap(), 0);
+                    return;
+                }
                 LootResult loot = generateLoot(minMobs, maxMobs, spawner);
-
+                if (spawner.getLootRevision().get() != expectedRevision || spawner.capacityRevision() != expectedCapacityRevision || spawner.isSelling()) {
+                    callback.onLootGenerated(Collections.emptyMap(), 0);
+                    return;
+                }
                 callback.onLootGenerated(
                         copyLoot(loot.items()),
                         loot.experience()
@@ -485,10 +506,19 @@ public class SpawnerLootGenerator {
      * @param spawnTime The spawn time to set (for timer accuracy)
      */
     public void addPreGeneratedLoot(SpawnerData spawner, Map<ItemSignature, Long> items, long experience, long spawnTime) {
+        addPreGeneratedLoot(spawner, new SpawnerData.PreGeneratedBatch(items, experience,
+                spawner.getLootRevision().get(), spawner.capacityRevision()), spawnTime);
+    }
+
+    public void addPreGeneratedLoot(SpawnerData spawner, SpawnerData.PreGeneratedBatch batch, long spawnTime) {
+        Map<ItemSignature, Long> items = batch.items();
+        long experience = batch.experience();
         if ((items == null || items.isEmpty()) && experience == 0) {
             return;
         }
 
+        final long expectedRevision = batch.revision();
+        final long expectedCapacityRevision = batch.capacityRevision();
         Location spawnerLocation = spawner.getSpawnerLocation();
         if (spawnerLocation == null) {
             return;
@@ -499,7 +529,9 @@ public class SpawnerLootGenerator {
                 return;
             }
 
-            try {
+            try (var allocation = plugin.getProductionCapacityService().acquire(spawner, expectedCapacityRevision)) {
+                if (allocation == null || spawner.getLootRevision().get() != expectedRevision
+                        || spawner.capacityRevision() != expectedCapacityRevision || spawner.isSelling()) return;
                 try {
                     if (!spawner.getDataLock().tryLock(50, java.util.concurrent.TimeUnit.MILLISECONDS)) {
                         return;
@@ -521,7 +553,8 @@ public class SpawnerLootGenerator {
                     spawner.getDataLock().unlock();
                 }
 
-                Scheduler.runTaskAsync(() -> {
+                // The batch is already rolled; apply it on this region under its lock.
+                {
                     boolean changed = false;
 
                     if (experience > 0 && spawner.getSpawnerExp() < spawner.getMaxStoredExp()) {
@@ -569,7 +602,7 @@ public class SpawnerLootGenerator {
                     spawner.updateCapacityStatus();
                     handleGuiUpdates(spawner);
                     spawnerManager.markSpawnerModified(spawner.getSpawnerId());
-                });
+                }
             } finally {
                 spawner.getLootGenerationLock().unlock();
             }

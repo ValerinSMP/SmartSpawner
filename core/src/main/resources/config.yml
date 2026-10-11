@@ -152,14 +152,29 @@ performance:
     # Recommended: 1000-10000.
     approximation_threshold: 1000
 
-# Valerin: only a single spawner may change type by default.
+# Valerin: an egg may change up to 50 stacked units.
 # A value <= 0 disables the stack restriction.
 spawner_egg_change:
-  max_stack_to_allow_change: 1
+  max_stack_to_allow_change: 50
 
 # Read-only stock accounting. Includes persisted rows in unloaded chunks.
 # Restart required. Minimum interval is 60 seconds. No ownership inference or limits.
 production:
+  # observation preserves production. enforce is approved for Test, not Custom.
+  mode: observation
+  farm-cap: 100
+  # Effective inherited permission checks; no primary-group or OP lookup.
+  # Explicit smartspawner.production.capacity.<tier> grants/denials override these.
+  rank-permissions:
+    '60': group.guardian
+    '70': group.ascendido
+    '80': group.arcano
+    '90': group.elite
+    '100': group.leyenda
+  spatial:
+    # Every horizontal window; all types/Y, inclusive 33 positions (distance <= 32).
+    span: 33
+    cap: 100
   observation:
     enabled: true
     interval-seconds: 60

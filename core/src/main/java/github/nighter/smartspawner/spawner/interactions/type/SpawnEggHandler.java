@@ -60,6 +60,10 @@ public class SpawnEggHandler {
             return;
         }
 
+        if (!plugin.getProductionCapacityService().canMutate(spawnerData.getSpawnerId())) {
+            messageService.sendMessage(player, "action_in_progress");
+            return;
+        }
         // Check permission
         if (!player.hasPermission(PERMISSION_CHANGE_TYPE)) {
             messageService.sendMessage(player, NO_PERMISSION_KEY);
@@ -67,7 +71,7 @@ public class SpawnEggHandler {
         }
 
         // Preserve the Valerin restriction before firing callbacks or consuming an egg.
-        int maxStack = plugin.getConfig().getInt("spawner_egg_change.max_stack_to_allow_change", 1);
+        int maxStack = plugin.getConfig().getInt("spawner_egg_change.max_stack_to_allow_change", 50);
         if (exceedsEggChangeStackLimit(spawnerData.getStackSize(), maxStack)) {
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("max_stack", String.valueOf(maxStack));
@@ -110,8 +114,12 @@ public class SpawnEggHandler {
             if(e.isCancelled()) return false;
         }
 
-        // Update spawner data
+        if (spawnerData.getEntityType() == newType) return false;
+        if (!plugin.getSpawnerSellManager().sellBeforeTypeChange(player, spawnerData)) return false;
+
+        // Update only after sale succeeded; stored XP is not collected by the sale.
         spawnerData.setEntityType(newType);
+        plugin.getSpawnerManager().markSpawnerModified(spawnerData.getSpawnerId());
         spawnerData.updateLastInteractedPlayer(player.getName());
 
         // Update physical spawner

@@ -32,3 +32,10 @@ no se decompilaron nuevos JAR ni se sustituyeron clases del upstream por archivo
 - Cuatro regresiones de claves y límites; añadido el módulo API al classpath
   de tests porque upstream había aislado esas dependencias.
 - Compilación y 86 tests aprobados. Sin instalación ni prueba gameplay.
+
+## D3 Test (2026-10-11)
+
+El propietario cambio el umbral de huevos a50 unidades (51+ bloqueado); <=0 sigue desactivandolo.
+Venta previa al cambio, propiedad/granja durable local y cupos productivos se detallan en
+[la entrega D3](docs/valerin/DELIVERY-D3-PRODUCTION-20261011.md). Instalacion solo Test,
+activacion/gameplay pendientes del propietario; Custom no modificado. API reciclaje sigue DRAFT.

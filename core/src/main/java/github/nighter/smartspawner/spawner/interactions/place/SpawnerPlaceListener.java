@@ -127,12 +127,13 @@ public class SpawnerPlaceListener implements Listener {
             }
         }
 
+        var ownership = plugin.getProductionOwnershipItem().read(item);
         if (!immediatelyConsumeItems(player, item, stackSize)) {
             event.setCancelled(true);
             return;
         }
 
-        handleSpawnerSetup(block, player, storedEntityType, isVanillaSpawner, stackSize, itemSpawnerMaterial, configName);
+        handleSpawnerSetup(block, player, storedEntityType, isVanillaSpawner, stackSize, itemSpawnerMaterial, configName, ownership);
     }
 
     private boolean checkPlacementCooldown(Player player) {
@@ -226,7 +227,7 @@ public class SpawnerPlaceListener implements Listener {
 
     private void handleSpawnerSetup(Block block, Player player, EntityType entityType,
                                     boolean isVanillaSpawner, int stackSize, Material itemSpawnerMaterial,
-                                    String configName) {
+                                    String configName, github.nighter.smartspawner.production.ProductionOwnershipRepository.Ownership ownership) {
         if (entityType == null || entityType == EntityType.UNKNOWN) {
             return;
         }
@@ -252,14 +253,14 @@ public class SpawnerPlaceListener implements Listener {
                 SpawnerDisplayConfigurator.applyItem(plugin, delayedSpawner, configName, itemSpawnerMaterial);
                 delayedSpawner.update(true, false);
                 
-                createSmartItemSpawner(block, player, itemSpawnerMaterial, configName, stackSize);
+                createSmartItemSpawner(block, player, itemSpawnerMaterial, configName, stackSize, ownership);
             } else {
                 // Handle regular entity spawners
                 EntityType finalEntityType = getEntityType(entityType, delayedSpawner);
 
                 SpawnerDisplayConfigurator.applyMob(plugin, delayedSpawner, configName, finalEntityType);
                 delayedSpawner.update(true, false);
-                createSmartSpawner(block, player, finalEntityType, configName, stackSize);
+                createSmartSpawner(block, player, finalEntityType, configName, stackSize, ownership);
             }
 
             setupHopperIntegration(block);
@@ -279,14 +280,14 @@ public class SpawnerPlaceListener implements Listener {
         return entityType;
     }
 
-    private void createSmartSpawner(Block block, Player player, EntityType entityType, String configName, int stackSize) {
+    private void createSmartSpawner(Block block, Player player, EntityType entityType, String configName, int stackSize, github.nighter.smartspawner.production.ProductionOwnershipRepository.Ownership ownership) {
         // Check if a spawner already exists at this location (prevent duplicates/ghost spawners)
         SpawnerData existingSpawner = spawnerManager.getSpawnerByLocation(block.getLocation());
         if (existingSpawner != null) {
             return;
         }
 
-        String spawnerId = UUID.randomUUID().toString().substring(0, 8);
+        String spawnerId = UUID.randomUUID().toString();
 
         BlockState state = block.getState(false);
         if (state instanceof CreatureSpawner spawner) {
@@ -301,6 +302,7 @@ public class SpawnerPlaceListener implements Listener {
         // Track player interaction for last interaction field
         spawner.updateLastInteractedPlayer(player.getName());
         spawnerManager.addSpawner(spawnerId, spawner);
+        plugin.getProductionCapacityService().placed(spawner, ownership);
         spawnerManager.queueSpawnerForSaving(spawnerId);
 
         if (Config.get().isSpawnerActivateParticlesEnabled()) {
@@ -310,14 +312,14 @@ public class SpawnerPlaceListener implements Listener {
         messageService.sendMessage(player, "spawner_activated");
     }
 
-    private void createSmartItemSpawner(Block block, Player player, Material itemMaterial, String configName, int stackSize) {
+    private void createSmartItemSpawner(Block block, Player player, Material itemMaterial, String configName, int stackSize, github.nighter.smartspawner.production.ProductionOwnershipRepository.Ownership ownership) {
         // Check if a spawner already exists at this location (prevent duplicates/ghost spawners)
         SpawnerData existingSpawner = spawnerManager.getSpawnerByLocation(block.getLocation());
         if (existingSpawner != null) {
             return;
         }
 
-        String spawnerId = UUID.randomUUID().toString().substring(0, 8);
+        String spawnerId = UUID.randomUUID().toString();
 
         BlockState state = block.getState(false);
         if (state instanceof CreatureSpawner spawner) {
@@ -333,6 +335,7 @@ public class SpawnerPlaceListener implements Listener {
         spawner.updateLastInteractedPlayer(player.getName());
 
         spawnerManager.addSpawner(spawnerId, spawner);
+        plugin.getProductionCapacityService().placed(spawner, ownership);
         spawnerManager.queueSpawnerForSaving(spawnerId);
 
         if (Config.get().isSpawnerActivateParticlesEnabled()) {

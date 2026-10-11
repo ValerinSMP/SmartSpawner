@@ -96,6 +96,14 @@ public class SpawnerMenuUI {
     }
 
     public void openSpawnerMenu(Player player, SpawnerData spawner, boolean refresh) {
+        var capacity = plugin.getProductionCapacityService();
+        if (!refresh && capacity != null && capacity.enforcing()) {
+            int productive = capacity.productive(spawner);
+            plugin.getMessageService().sendMessage(player, "production_stock_status", java.util.Map.of(
+                    "stock", Integer.toString(spawner.getStackSize()),
+                    "productive", Integer.toString(productive),
+                    "held", Integer.toString(spawner.getStackSize() - productive)));
+        }
         if(SpawnerOpenGUIEvent.getHandlerList().getRegisteredListeners().length != 0) {
             SpawnerOpenGUIEvent openEvent = new SpawnerOpenGUIEvent(
                     player,

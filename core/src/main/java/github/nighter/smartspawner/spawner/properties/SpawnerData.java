@@ -140,8 +140,21 @@ public class SpawnerData {
     private Material preferredSortItem;
 
     // CRITICAL: Pre-generated loot storage for better UX - access must be synchronized via lootGenerationLock
+    @Getter
+    private final java.util.concurrent.atomic.AtomicLong lootRevision = new java.util.concurrent.atomic.AtomicLong();
     private volatile Map<ItemSignature, Long> preGeneratedItems;
     private volatile long preGeneratedExperience;
+    private long preGeneratedRevision;
+    private long preGeneratedCapacityRevision;
+    public record PreGeneratedBatch(Map<ItemSignature, Long> items, long experience, long revision, long capacityRevision) {}
+    public synchronized PreGeneratedBatch takePreGeneratedLoot() {
+        var batch = new PreGeneratedBatch(preGeneratedItems, preGeneratedExperience, preGeneratedRevision, preGeneratedCapacityRevision);
+        clearPreGeneratedLoot();
+        return batch;
+    }
+    public long capacityRevision() {
+        return plugin.getProductionCapacityService() == null ? 0 : plugin.getProductionCapacityService().revision();
+    }
     private volatile boolean isPreGenerating;
 
     // Cache for no-loot detection to avoid repeated expensive checks
@@ -423,11 +436,14 @@ public class SpawnerData {
             return;
         }
 
+        lootRevision.incrementAndGet();
+        clearPreGeneratedLoot();
         this.stackSize = newStackSize;
         calculateStackBasedValues();
 
         // Reset lastSpawnTime to prevent exploit where players break spawners to trigger immediate loot
         this.lastSpawnTime = System.currentTimeMillis();
+        if (plugin.getProductionCapacityService() != null) plugin.getProductionCapacityService().touch(this);
         updateHologramData();
 
         // Invalidate GUI cache when stack size changes
@@ -520,9 +536,13 @@ public class SpawnerData {
     }
 
     public void setEntityType(EntityType newType) {
+        cachedHasNoLoot = null;
+        lootRevision.incrementAndGet();
+        clearPreGeneratedLoot();
         this.entityType = newType;
         this.configName = defaultMobName(plugin, newType);
         refreshDefinition();
+        if (plugin.getProductionCapacityService() != null) plugin.getProductionCapacityService().touch(this);
         // Mark sell value as dirty since entity type and prices changed
         this.sellValueDirty = true;
         updateHologramData();
@@ -787,7 +807,7 @@ public class SpawnerData {
     /**
      * Finds item price using the cache
      */
-    private double findItemPrice(ItemSignature itemSignature, Map<String, Double> priceCache) {
+    public double findItemPrice(ItemSignature itemSignature, Map<String, Double> priceCache) {
         if (priceCache == null) {
             return 0.0;
         }
@@ -905,6 +925,12 @@ public class SpawnerData {
     }
 
     public synchronized void storePreGeneratedLoot(Map<ItemSignature, Long> items, long experience) {
+        storePreGeneratedLoot(items, experience, lootRevision.get(), capacityRevision());
+    }
+
+    public synchronized void storePreGeneratedLoot(Map<ItemSignature, Long> items, long experience, long revision, long capacityRevision) {
+        this.preGeneratedRevision = revision;
+        this.preGeneratedCapacityRevision = capacityRevision;
         this.preGeneratedItems = items;
         this.preGeneratedExperience = experience;
     }
@@ -922,6 +948,10 @@ public class SpawnerData {
     }
 
     public synchronized boolean hasPreGeneratedLoot() {
+        if (preGeneratedRevision != lootRevision.get() || preGeneratedCapacityRevision != capacityRevision()) {
+            clearPreGeneratedLoot();
+            return false;
+        }
         return (preGeneratedItems != null && !preGeneratedItems.isEmpty()) || preGeneratedExperience > 0;
     }
 

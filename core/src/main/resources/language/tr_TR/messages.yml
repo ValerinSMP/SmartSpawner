@@ -145,3 +145,12 @@ sell_and_exp_success_with_mending:
 
 egg_change_stacked_not_allowed:
   message: '&cYou cannot change this stacked spawner type. Maximum: {max_stack}; current: {current_stack}.'
+
+egg_change_sale_blocked:
+  message: "Cannot change type: collect items without a sell price or enable selling."
+
+production_mixed_ownership:
+  message: "Cannot mix owners in one block. Place separately or explicitly transfer ownership."
+
+production_stock_status:
+  message: "{stock} units retained: {productive} productive and {held} held. Spawners, loot and XP are preserved."

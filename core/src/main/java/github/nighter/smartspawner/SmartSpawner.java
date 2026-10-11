@@ -132,6 +132,8 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private SpawnerStorage spawnerStorage;
     private DatabaseManager databaseManager;
     private github.nighter.smartspawner.production.ProductionObserver productionObserver;
+    private github.nighter.smartspawner.production.ProductionCapacityService productionCapacityService;
+    private github.nighter.smartspawner.production.ProductionOwnershipItem productionOwnershipItem;
     private SpawnerManager spawnerManager;
     private HopperService hopperService;
     private HopperConfig hopperConfig;
@@ -196,7 +198,20 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
             return;
         }
 
-        // Observation is read-only and configured at restart; no capacity enforcement.
+        String productionMode = getConfig().getString("production.mode", "observation");
+        if (!"observation".equalsIgnoreCase(productionMode) && !"enforce".equalsIgnoreCase(productionMode)) {
+            getLogger().severe("Invalid production.mode; expected observation or enforce.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        this.productionOwnershipItem = new github.nighter.smartspawner.production.ProductionOwnershipItem(this);
+        this.productionCapacityService = new github.nighter.smartspawner.production.ProductionCapacityService(
+                this, "enforce".equalsIgnoreCase(productionMode),
+                getConfig().getInt("production.farm-cap", 100),
+                getConfig().getInt("production.spatial.span", 33),
+                getConfig().getInt("production.spatial.cap", 100));
+
+        // Observation is configured at restart.
         if (getConfig().getBoolean("production.observation.enabled", true)) {
             this.productionObserver = new github.nighter.smartspawner.production.ProductionObserver(
                     databaseManager::getConnection, databaseManager.getTableSpawners(),
@@ -608,6 +623,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     }
 
     private void saveAndCleanup() {
+        if (productionCapacityService != null) productionCapacityService.close();
         if (productionObserver != null) {
             productionObserver.close();
         }
