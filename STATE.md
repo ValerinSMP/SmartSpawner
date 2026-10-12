@@ -1,12 +1,18 @@
-# SmartSpawner — D10 mine admin instalado, activación pendiente
+# SmartSpawner — D11 durabilidad Eco instalado, activación pendiente
 2026-10-11. Fuente canónica personal: /root/development/projects/forks/upstream/SmartSpawner.
-Rama work/valerin-production-contract-v1; versión 1.8.3-valerin-production.8.
-Custom .8 instalado en disco, activación pendiente próximo arranque/reinicio del propietario. Sin lifecycle.
-SHA256 1659b8035581940b06d4a1e5e809631d731fe599fe30dc66c09d9548a0289d53.
+Rama work/valerin-production-contract-v1; versión 1.8.3-valerin-production.9.
+Custom .9 instalado en disco, pendiente reinicio diario/propietario. Runtime último enable observado .7. Sin lifecycle.
+SHA256 7a66d64965bf16b79670e76a0366a86dcd386f5c7bff4f1d39d52b99ce0aa9f2.
 Backup original .3 HDD smartspawner-custom-overlap-fix-20261011T212446Z.
 Backup final HDD smartspawner-custom-overlap-fix-20261011T212643Z (candidato intermedio .4).
 Ambos snapshots SQLite consistentes/integrity ok:3182 bloques/18878 unidades al respaldo;
 config intacta, ningún restore/SQL directo a stock. Los conteos son actuales, no snapshot inicial3354.
+
+D11: SpawnerBreakListener respeta maxDamage personalizado (Eco8124 frente netherite2031),
+conserva metadata/reglas existentes; desgaste0/unbreakable y overflow cubiertos.170tests/0fallos
++shadowJar personal,9regresiones nuevas. BackupHDD smartspawner-tool-durability-20261012T014152Z
+JARprevio .8/config/manifest verificados; config y BD intactas, sin migración/lifecycle.
+Entrega/rollback: docs/valerin/DELIVERY-D11-TOOL-DURABILITY-20261011.md. Gameplay Eco pendiente.
 
 D10: /ss mine <jugador|UUID> [página] admin/read-only, nombres registrados offline mediante
 LPworker. Permiso adicional smartspawner.command.mine.others/defaultop; sin cambiar rangos.

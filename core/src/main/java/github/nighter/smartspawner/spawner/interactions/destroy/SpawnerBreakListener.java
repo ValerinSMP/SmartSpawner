@@ -394,7 +394,8 @@ public class SpawnerBreakListener implements Listener {
     }
 
     private void reduceDurability(ItemStack tool, Player player, int durabilityLoss) {
-        if (tool.getType().getMaxDurability() == 0) {
+        int materialDurability = tool.getType().getMaxDurability();
+        if (durabilityLoss <= 0 || materialDurability == 0) {
             return;
         }
 
@@ -402,19 +403,29 @@ public class SpawnerBreakListener implements Listener {
         if (meta.isUnbreakable()) {
             return;
         }
-        if (meta instanceof Damageable) {
-            Damageable damageable = (Damageable) meta;
-            int currentDurability = damageable.getDamage();
-            int newDurability = currentDurability + durabilityLoss;
-
-            if (newDurability >= tool.getType().getMaxDurability()) {
+        if (meta instanceof Damageable damageable) {
+            if (applyDurabilityLoss(damageable, materialDurability, durabilityLoss)) {
                 player.getInventory().setItemInMainHand(null);
                 player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
             } else {
-                damageable.setDamage(newDurability);
                 tool.setItemMeta(meta);
             }
         }
+    }
+
+    /** Applies damage to the existing metadata; true means the tool exhausted its actual life. */
+    static boolean applyDurabilityLoss(Damageable meta, int materialDurability, int durabilityLoss) {
+        if (durabilityLoss <= 0 || materialDurability == 0 || meta.isUnbreakable()) {
+            return false;
+        }
+        // Eco/custom items can override the material's vanilla durability.
+        int maxDamage = meta.hasMaxDamage() ? meta.getMaxDamage() : materialDurability;
+        long newDamage = (long) meta.getDamage() + durabilityLoss;
+        if (newDamage >= maxDamage) {
+            return true;
+        }
+        meta.setDamage((int) newDamage);
+        return false;
     }
 
     private void cleanupSpawner(Block block, SpawnerData spawner) {
